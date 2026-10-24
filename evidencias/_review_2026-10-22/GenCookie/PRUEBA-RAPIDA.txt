@@ -1,0 +1,103 @@
+GenCookie — prueba rápida
+=========================
+
+Este archivo es solo para comprobar que todo levanta bien: el servicio de
+correo (EmailApi) y el generador (python main.py). La parte del EmailApi no
+necesita proxies ni claves de pago.
+
+Ojo: hay dos archivos main.py. El de la carpeta EmailApi arranca el servicio
+de correo; el de la carpeta GenCookie es el generador de cuentas.
+
+
+1) Preparar
+-----------
+    cd GenCookie
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install -r requirements.txt
+    pip install -r EmailApi/reqs.txt
+
+
+2) Configurar
+-------------
+    cp .env.example .env
+
+Edita .env:
+  - TEMPMAIL_API: la dirección donde quedó el EmailApi.
+  - EMAILAPI_API_PORT y EMAILAPI_SMTP_PORT: si ya hay otro EmailApi corriendo
+    en el 3000/1025 (por ejemplo el del bot), cámbialos a 3001 y 1026, y
+    entonces TEMPMAIL_API=http://127.0.0.1:3001
+
+Los puertos tienen que estar libres: si no, el servicio no arranca y se ve el
+error "address already in use".
+
+
+3) Levantar el EmailApi (terminal 1)
+------------------------------------
+    cd EmailApi
+    python main.py
+
+Debes ver algo como: "Uvicorn running on http://127.0.0.1:3000" (o el puerto
+que pusiste). Ese proceso se queda corriendo: ahí llegan los correos por SMTP
+(puerto 1025) y ahí se piden los buzones por HTTP (puerto 3000).
+
+
+4) Probar el EmailApi (terminal 2)
+---------------------------------
+Vuelve a la carpeta GenCookie y pide un buzón temporal:
+
+    curl -s http://127.0.0.1:3000/odisea/generate
+
+Te devuelve algo como:
+    {"email": "abc123@olimpo.cyou", "token": "9f2c-....", ...}
+
+Copia el email y el token. Manda un correo de prueba a esa dirección:
+
+    python3 - <<'PY'
+    import smtplib
+    from email.message import EmailMessage
+    msg = EmailMessage()
+    msg['From'] = 'prueba@ejemplo.com'
+    msg['To'] = 'PEGA_AQUI_EL_EMAIL'
+    msg['Subject'] = 'Tu codigo Amazon 123456'
+    msg.set_content('Tu codigo de verificacion Amazon es 123456')
+    with smtplib.SMTP('127.0.0.1', 1025) as s:
+        s.send_message(msg)
+    print('correo enviado')
+    PY
+
+Y lee el buzón:
+
+    curl -s http://127.0.0.1:3000/odisea/messages/PEGA_AQUI_EL_TOKEN
+
+Debes ver el mensaje y el código:
+    {"email": "...", "messages": [...], "otp": "123456", ...}
+
+Si sale "otp": "123456", el EmailApi funciona.
+
+
+5) Probar el generador (terminal 2)
+------------------------------------
+Desde la carpeta GenCookie:
+
+    python main.py
+
+Abre un menú: pide país, cuántas cuentas y si usas tu propio correo. Para una
+prueba sin menú:
+
+    python main.py --country US --count 1
+
+Qué se ve:
+  - un spinner con el paso actual (obtener correo, registrar, captcha, etc.)
+  - al final, el resultado con el correo y la contraseña, o el motivo del fallo
+
+El detalle completo queda en logs/gencookie.log: ábrelo si algo falla.
+
+En una prueba sin proxy y sin claves lo normal es que Amazon rechace el
+registro. Lo que se comprueba aquí es que el programa arranca, avanza y
+termina con un mensaje claro.
+
+
+6) Apagar
+---------
+En la terminal 1: Ctrl + C para detener el EmailApi.

@@ -1,0 +1,158 @@
+{
+  "headings": [
+    {
+      "innerText": "Inicia sesión o crea tu cuenta"
+    }
+  ],
+  "forms": [
+    {
+      "id": "ap_login_form",
+      "className": "",
+      "innerText": "Continuar"
+    },
+    {
+      "id": "",
+      "className": "",
+      "innerText": ""
+    }
+  ],
+  "inputs": [
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "ap_email_login",
+      "className": "a-input-text"
+    },
+    {
+      "id": "auth-credential-autofill-hint",
+      "className": "a-input-text aok-hidden"
+    },
+    {
+      "id": "",
+      "className": "a-button-input"
+    },
+    {
+      "id": "",
+      "className": ""
+    }
+  ],
+  "buttons": [
+    {
+      "innerText": "",
+      "id": "claim-input-clear-button"
+    },
+    {
+      "innerText": "",
+      "id": ""
+    }
+  ],
+  "selects": [
+    {
+      "id": "claim-input-dropdown-select-element"
+    }
+  ],
+  "links": [
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": "Condiciones de uso"
+    },
+    {
+      "innerText": "Aviso de privacidad"
+    },
+    {
+      "innerText": "¿Necesitas ayuda?"
+    },
+    {
+      "innerText": "Condiciones de uso"
+    },
+    {
+      "innerText": "Aviso de privacidad"
+    },
+    {
+      "innerText": "Ayuda"
+    }
+  ],
+  "images": [
+    {
+      "id": "",
+      "className": ""
+    }
+  ],
+  "data_asin": []
+}

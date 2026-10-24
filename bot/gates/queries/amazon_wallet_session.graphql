@@ -1,0 +1,80 @@
+# Sesión de Prime de Amazon MX en un Chromium real (Browserless/BQL).
+#
+# Hace login de verdad y deja el navegador EN la página del entry de Prime,
+# que es la única forma de cruzar el muro `openid.pape.max_auth_age=0`:
+# con una cookie guardada Amazon siempre redirige a /ap/signin.
+#
+# TRAMPA DE BQL: si un `waitForSelector` no encuentra el elemento, la query
+# entera revienta y se pierde TODO el diagnóstico (data = null). Por eso el
+# campo de contraseña y el botón de envío NO se esperan: primero se comprueba
+# con `evaluate` y, si faltan (Amazon está pidiendo CVF/OTP en vez de la
+# contraseña), se inyectan equivalentes vacíos para que `type` y `click`
+# nunca fallen. Así siempre se obtiene el estado real de la página.
+#
+# Devuelve:
+#   - finalUrl / pageTitle  -> dónde quedó el navegador (diagnóstico del muro)
+#   - widgetState / customerId -> extraídos con evaluate (la página de Prime
+#     pesa ~1 MB y el plan de Browserless corta la sesión a los 120 s)
+#   - bodyText -> texto plano (primeros 6000 chars) para clasificar el muro
+#   - sessionCookies -> cookie completa para seguir por HTTP
+#
+# Variables: $url (entry de Prime), $login (correo), $password (contraseña).
+# ESTADO: autorizado por el dueño (cuentas de prueba creadas por /gencookie).
+mutation AmazonWalletSession($url: String!, $login: String!, $password: String!) {
+  open: goto(url: $url, waitUntil: domContentLoaded) {
+    status
+    url
+    time
+  }
+  emailReady: waitForSelector(selector: "#ap_email_login", timeout: 15000) {
+    selector
+    time
+  }
+  emailTyped: type(selector: "#ap_email_login", text: $login) {
+    selector
+    time
+  }
+  continued: click(selector: "#continue") {
+    selector
+    time
+  }
+  afterContinue: waitForTimeout(time: 4000) {
+    time
+  }
+  passwordField: evaluate(content: "String((function(){var e=document.querySelector('#ap_password');if(e){return 'real';}var i=document.createElement('input');i.type='password';i.id='ap_password';document.body.appendChild(i);var b=document.querySelector('#signInSubmit');if(!b){var x=document.createElement('button');x.id='signInSubmit';x.type='button';document.body.appendChild(x);}return 'injected';})())") {
+    value
+  }
+  passwordTyped: type(selector: "#ap_password", text: $password) {
+    selector
+    time
+  }
+  submitted: click(selector: "#signInSubmit") {
+    selector
+    time
+  }
+  settled: waitForTimeout(time: 6000) {
+    time
+  }
+  finalUrl: evaluate(content: "String(location.href)") {
+    value
+  }
+  pageTitle: title {
+    text: title
+  }
+  widgetState: evaluate(content: "String((document.querySelector('input[name=ppw-widgetState]')||{value:''}).value||'')") {
+    value
+  }
+  customerId: evaluate(content: "String((document.documentElement.outerHTML.match(/customerID[^A-Za-z0-9]{0,20}?([A-Z0-9]{10,})/)||[])[1]||'')") {
+    value
+  }
+  bodyText: evaluate(content: "String((document.body&&document.body.innerText||'').slice(0,6000))") {
+    value
+  }
+  sessionCookies: cookies {
+    cookies {
+      name
+      value
+      domain
+    }
+  }
+}

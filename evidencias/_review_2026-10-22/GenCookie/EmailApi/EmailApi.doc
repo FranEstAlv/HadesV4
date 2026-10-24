@@ -1,0 +1,118 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  TempMail API  —  Configuración de dominio (DNS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+GenCookie corregido y actualizado por @MrMxyzptlk04
+
+
+Para que tu dominio pueda recibir correos en esta API,
+debes agregar exactamente estos registros en tu panel de DNS
+(Cloudflare, Namecheap, GoDaddy, etc.).
+
+Reemplaza  TU_IP  con la IP del servidor donde corre la API.
+
+
+─────────────────────────────────────────────────────────
+  REGISTROS OBLIGATORIOS
+─────────────────────────────────────────────────────────
+
+  1. Registro MX  (recibe los correos)
+  ──────────────────────────────────────
+  Tipo   :  MX
+  Nombre :  @
+  Valor  :  tudominio.com
+  Prioridad: 10
+  TTL    :  Auto (Defecto)
+
+  2. Registro A del servidor de correo
+  ──────────────────────────────────────
+  Tipo   :  A
+  Nombre :  mail
+  Valor  :  TU_IP
+  TTL    :  Auto
+
+  ⚠️  Si usas Cloudflare, desactiva el proxy (nube naranja → gris)
+      en este registro A. El puerto 25 NO funciona detrás del proxy.
+
+
+─────────────────────────────────────────────────────────
+  EJEMPLO COMPLETO para "tudominio.com"
+─────────────────────────────────────────────────────────
+
+  Tipo   Nombre                  Valor                     Prioridad
+  ────   ──────────────────────  ────────────────────────  ────
+  MX     @                       mail.tudominio.com        10
+  A      mail                    TU_IP                      —
+  TXT    @                       v=spf1 ip4:TU_IP ~all      —
+
+Este último de TXT no es necesario.
+
+
+─────────────────────────────────────────────────────────
+  PUERTO SMTP
+─────────────────────────────────────────────────────────
+
+La API escucha por defecto en el puerto 1025 para no requerir root.
+Redirige el puerto 25 hacia ese puerto:
+
+    sudo iptables -t nat -A PREROUTING -p tcp --dport 25 \
+        -j REDIRECT --to-port 1025
+
+O cambia EMAILAPI_SMTP_PORT si el proceso corre con permisos para
+usar el puerto 25.
+
+
+─────────────────────────────────────────────────────────
+  VARIABLES DE ENTORNO
+─────────────────────────────────────────────────────────
+
+  EMAILAPI_DOMAINS         Dominios separados por comas
+  EMAILAPI_SMTP_HOST       Interfaz SMTP (0.0.0.0)
+  EMAILAPI_SMTP_PORT       Puerto SMTP (1025)
+  EMAILAPI_API_HOST        Interfaz de la API (127.0.0.1)
+  EMAILAPI_API_PORT        Puerto de la API (3000)
+  EMAILAPI_DB_PATH         Ruta de la base SQLite
+  EMAILAPI_DOMAIN_WEIGHTS  Pesos por dominio: dom1:3,dom2:1
+
+Las variables se pueden dejar en un archivo .env junto a EmailApi/main.py
+o en la raíz del proyecto (copia .env.example y complétalo).
+
+
+─────────────────────────────────────────────────────────
+  CORREO POR IMAP
+─────────────────────────────────────────────────────────
+
+Además de los buzones locales, la API puede leer un correo real
+(Gmail o dominio propio) por IMAP:
+
+    POST /odisea/mailbox
+    {"email": "tu@gmail.com",
+     "password": "contraseña de aplicación",
+     "alias": "amazon"}
+
+    GET /odisea/messages/{token}
+    GET /odisea/otp/{token}
+    DELETE /odisea/mailbox/{token}
+
+En Gmail se requiere una contraseña de aplicación de 16 caracteres.
+Gmail ignora los puntos de la parte local, así que se aceptan direcciones
+enmascaradas (por ejemplo e.steban+amazon@gmail.com) y el filtro de
+destinatario compara sin puntos.
+Para un dominio propio se usa imap.<dominio>:993, salvo que se indique
+imap_host / imap_port en el cuerpo de la petición.
+
+
+Proveedores de dominios:
+** name.com funciona mejor con esta API.
+** namecheap, contabo, spaceship y hostinger también tienen dominios
+   económicos (.shop, .cyou, etc.).
+
+NO compres dominios con descuento o promoción: casi siempre vienen
+quemados o en listas negras y los correos no llegan bien.
+
+Los correos de dominios propios se pueden recibir en la API (registro MX)
+o leer por IMAP con EMAILAPI y las variables IMAP_* del .env.
+
+Los dominios suelen soportar entre 40 y 80 cookies; es mejor rotarlos
+entre intervalos para no marcarlos seguidos. La API ya selecciona uno
+aleatorio de tu lista.

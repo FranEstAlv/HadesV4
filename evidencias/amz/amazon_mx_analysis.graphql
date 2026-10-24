@@ -1,0 +1,141 @@
+query AnalyzeAmazonPaymentFlow($email: String!, $password: String!) {
+  # Configurar navegador
+  setUserAgent(userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36") {
+    result
+  }
+  
+  setViewport(viewport: {width: 1920, height: 1080}) {
+    result
+  }
+  
+  # 1. Ir a la página de login
+  gotoLogin: goto(url: "https://www.amazon.com.mx/ap/signin") {
+    html
+    statusCode
+  }
+  
+  # 2. Login automático
+  typeEmail: type(selector: "#ap_email", text: $email) {
+    result
+  }
+  
+  clickContinue: click(selector: "#continue") {
+    success
+  }
+  
+  typePassword: type(selector: "#ap_password", text: $password) {
+    result
+  }
+  
+  clickSignIn: click(selector: "#signInSubmit") {
+    success
+  }
+  
+  # 3. Esperar redirección y carga
+  waitForNav: waitForNavigation(timeout: 10000) {
+    url
+  }
+  
+  waitAfterLogin: waitForTimeout(ms: 3000) {
+    result
+  }
+  
+  # 4. Ir a Amazon Prime
+  gotoPrime: goto(url: "https://www.amazon.com.mx/amazonprime") {
+    html
+    statusCode
+  }
+  
+  # 5. Esperar carga completa
+  waitForPaymentButton: waitForSelector(selector: "[data-action='add-payment-method']", timeout: 10000) {
+    exists
+  }
+  
+  # 6. Click en "Agregar método de pago"
+  clickAddPayment: click(selector: "[data-action='add-payment-method']") {
+    success
+  }
+  
+  # 7. Esperar que aparezca el formulario
+  waitForForm: waitForSelector(selector: "form", timeout: 10000) {
+    exists
+  }
+  
+  # 8. Extraer TODA la información crítica
+  extractData: evaluate(expression: """
+    (function() {
+      try {
+        // 1. Cookies importantes
+        const allCookies = document.cookie;
+        const importantCookies = allCookies
+          .split(';')
+          .map(c => c.trim())
+          .filter(c => 
+            c.startsWith('session') || 
+            c.startsWith('ubid') || 
+            c.startsWith('at-') ||
+            c.startsWith('sst-') ||
+            c.startsWith('x-') ||
+            c.includes('token') ||
+            c.includes('auth')
+          );
+        
+        // 2. Variables globales importantes
+        const globalVars = {};
+        Object.keys(window).forEach(key => {
+          if (key.includes('token') || 
+              key.includes('auth') || 
+              key.includes('session') ||
+              key.includes('customer') ||
+              key.includes('widget')) {
+            try {
+              const value = window[key];
+              if (typeof value === 'string' || typeof value === 'object') {
+                globalVars[key] = typeof value === 'object' ? JSON.stringify(value) : value;
+              }
+            } catch(e) {
+              // Ignorar errores de acceso
+            }
+          }
+        });
+        
+        // 3. Formularios de pago
+        const paymentForms = Array.from(document.querySelectorAll('form')).map(form => ({
+          action: form.action,
+          method: form.method,
+          inputs: Array.from(form.querySelectorAll('input[name]')).map(input => ({
+            name: input.name,
+            type: input.type,
+            value: input.value.substring(0, 50) // Truncar valores sensibles
+          }))
+        }));
+        
+        // 4. Iframes de pago
+        const paymentFrames = Array.from(document.querySelectorAll('iframe[src*="payment"], iframe[src*="widget"]'))
+          .map(frame => frame.src);
+        
+        // 5. Encontrar elementos de pago específicos
+        const paymentElements = {
+          hasAddPaymentButton: !!document.querySelector("[data-action='add-payment-method']"),
+          hasPaymentForm: !!document.querySelector("form[action*='payment']"),
+          hasWidgetFrame: !!document.querySelector("iframe[src*='widget']")
+        };
+        
+        return {
+          timestamp: new Date().toISOString(),
+          cookies: importantCookies,
+          globalVariables: globalVars,
+          paymentForms: paymentForms,
+          paymentFrames: paymentFrames,
+          paymentElements: paymentElements,
+          userAgent: navigator.userAgent,
+          url: window.location.href
+        };
+      } catch(error) {
+        return {error: error.message};
+      }
+    })()
+  """) {
+    result
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "requested_url": "https://api.stripe.com/v1/sources",
+  "final_url": "https://api.stripe.com/v1/sources",
+  "http_status": 404,
+  "title": "",
+  "navigation_time": 2723,
+  "proxy_country": "mx",
+  "stealth": true,
+  "humanlike": true,
+  "bql_errors": []
+}

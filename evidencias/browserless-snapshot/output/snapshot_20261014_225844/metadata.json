@@ -1,0 +1,24 @@
+{
+  "requested_url": "https://www.insidehs.com/my-account/",
+  "final_url": null,
+  "http_status": null,
+  "title": "Page not found - Inside Hospitality Solutions",
+  "navigation_time": null,
+  "proxy_country": "mx",
+  "stealth": true,
+  "humanlike": true,
+  "bql_errors": [
+    {
+      "message": "Timeout of 30,000ms reached waiting for page navigation (requestId: c5cb6554-c94a-47e6-9144-fe90e369835f)",
+      "locations": [
+        {
+          "line": 2,
+          "column": 3
+        }
+      ],
+      "path": [
+        "navigation"
+      ]
+    }
+  ]
+}

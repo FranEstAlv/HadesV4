@@ -1,0 +1,282 @@
+{
+  "headings": [
+    {
+      "innerText": "Page Not Found!"
+    }
+  ],
+  "forms": [
+    {
+      "id": "",
+      "className": "search-form",
+      "innerText": "Search for:"
+    },
+    {
+      "id": "",
+      "className": "search-form",
+      "innerText": "\n\t\t\t\t\n\n\t\t\t\tSubmit\n\n\t\t\t\t\n\t\t\t\t\tType above and press Enter to search. Press Esc to cancel.\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "",
+      "className": "search-field"
+    },
+    {
+      "id": "",
+      "className": "search-submit"
+    },
+    {
+      "id": "",
+      "className": "search-field live-search-query"
+    }
+  ],
+  "buttons": [
+    {
+      "innerText": "\n\t\n\t\t\n\t\n",
+      "id": ""
+    },
+    {
+      "innerText": "",
+      "id": ""
+    },
+    {
+      "innerText": "Submit",
+      "id": ""
+    },
+    {
+      "innerText": "Manage consent",
+      "id": ""
+    }
+  ],
+  "selects": [],
+  "links": [
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": "Home"
+    },
+    {
+      "innerText": "Industry Resources"
+    },
+    {
+      "innerText": "2026 Hospitality Trade Shows & Conferences Guide"
+    },
+    {
+      "innerText": "Provider Directory"
+    },
+    {
+      "innerText": "Provider Spotlights"
+    },
+    {
+      "innerText": "Marketing Services"
+    },
+    {
+      "innerText": "Featured Articles"
+    },
+    {
+      "innerText": "IHS Video Insights"
+    },
+    {
+      "innerText": "IHS Daily Business Guides"
+    },
+    {
+      "innerText": "Advertising Services"
+    },
+    {
+      "innerText": "Provider Directory"
+    },
+    {
+      "innerText": "About"
+    },
+    {
+      "innerText": "FAQ"
+    },
+    {
+      "innerText": "Join"
+    },
+    {
+      "innerText": "Subscribe"
+    },
+    {
+      "innerText": "Contact Us"
+    },
+    {
+      "innerText": "Login or Register"
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": "Login or Register"
+    },
+    {
+      "innerText": "Subscribe"
+    },
+    {
+      "innerText": "Join"
+    },
+    {
+      "innerText": "Member Dashboard"
+    },
+    {
+      "innerText": "Edit Listing"
+    },
+    {
+      "innerText": "Contribute Content"
+    },
+    {
+      "innerText": "Facebook"
+    },
+    {
+      "innerText": "YouTube"
+    },
+    {
+      "innerText": "LinkedIn"
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": "Home"
+    },
+    {
+      "innerText": "Industry Resources"
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": "Advertising Services"
+    },
+    {
+      "innerText": "Provider Directory"
+    },
+    {
+      "innerText": "About"
+    },
+    {
+      "innerText": "Frequently Asked Questions"
+    },
+    {
+      "innerText": "Contact Us"
+    },
+    {
+      "innerText": "Shopping Cart"
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": "\n\t\t\n\t\t\t\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t \n\t\t\t\t\t\n\t"
+    },
+    {
+      "innerText": "\n\t\t\n\t"
+    },
+    {
+      "innerText": "Go to Previous Page"
+    },
+    {
+      "innerText": "Go to Homepage"
+    },
+    {
+      "innerText": "Read more"
+    },
+    {
+      "innerText": "Written Content"
+    },
+    {
+      "innerText": "Video Content"
+    },
+    {
+      "innerText": "Banner Advertising"
+    },
+    {
+      "innerText": "Sponsorship"
+    },
+    {
+      "innerText": "IHS Marketing Services"
+    },
+    {
+      "innerText": "Private Label Services"
+    },
+    {
+      "innerText": "info@insidehs.com"
+    },
+    {
+      "innerText": "Facebook"
+    },
+    {
+      "innerText": "YouTube"
+    },
+    {
+      "innerText": "LinkedIn"
+    },
+    {
+      "innerText": "PRIVACY POLICY"
+    },
+    {
+      "innerText": "COOKIES POLICY"
+    },
+    {
+      "innerText": "TERMS & CONDITIONS"
+    }
+  ],
+  "images": [
+    {
+      "id": "",
+      "className": "logo-mobile logo-image"
+    },
+    {
+      "id": "",
+      "className": "logo-image logo-image-dark"
+    },
+    {
+      "id": "",
+      "className": "logo-image"
+    },
+    {
+      "id": "",
+      "className": "slider-25528 slide-25533 msDefaultImage"
+    },
+    {
+      "id": "",
+      "className": "slider-25528 slide-26269 msDefaultImage"
+    },
+    {
+      "id": "",
+      "className": "logo-mobile logo-image"
+    }
+  ],
+  "data_asin": []
+}

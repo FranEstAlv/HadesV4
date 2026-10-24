@@ -1,0 +1,11 @@
+{
+  "requested_url": "https://www.googleapis.com/identitytoolkit/v3/relyingparty/signupNewUser",
+  "final_url": "https://www.googleapis.com/identitytoolkit/v3/relyingparty/signupNewUser",
+  "http_status": 404,
+  "title": "Error 404 (Not Found)!!1",
+  "navigation_time": 7123,
+  "proxy_country": "mx",
+  "stealth": true,
+  "humanlike": true,
+  "bql_errors": []
+}

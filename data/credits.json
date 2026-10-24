@@ -1,0 +1,14 @@
+{
+  "6060544328": {
+    "user_id": 6060544328,
+    "balance": 1000,
+    "transactions": [
+      {
+        "amount": 1000,
+        "reason": "Asignación desde panel de admin",
+        "admin_id": 6060544328,
+        "timestamp": "2026-10-04T19:28:41.450091+00:00"
+      }
+    ]
+  }
+}

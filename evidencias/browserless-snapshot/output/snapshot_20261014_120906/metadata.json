@@ -1,0 +1,11 @@
+{
+  "requested_url": "https://rutadirecta.com",
+  "final_url": "https://rutadirecta.com/",
+  "http_status": 200,
+  "title": "Rutadirecta",
+  "navigation_time": 21047,
+  "proxy_country": "mx",
+  "stealth": true,
+  "humanlike": true,
+  "bql_errors": []
+}

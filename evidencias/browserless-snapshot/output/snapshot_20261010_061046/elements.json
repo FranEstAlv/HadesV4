@@ -1,0 +1,560 @@
+{
+  "headings": [
+    {
+      "innerText": "Saltar a"
+    },
+    {
+      "innerText": "Métodos abreviados de teclado"
+    },
+    {
+      "innerText": "Los nuevos miembros pueden probar Prime gratis por 30 días"
+    },
+    {
+      "innerText": "Envíos gratis y rápidos"
+    },
+    {
+      "innerText": "Entregas rápidas e ilimitadas"
+    },
+    {
+      "innerText": "Envíos GRATIS en Rappi Restaurantes"
+    },
+    {
+      "innerText": "Envíos internacionales"
+    },
+    {
+      "innerText": "Más beneficios Prime"
+    },
+    {
+      "innerText": "Prime Gaming"
+    },
+    {
+      "innerText": "Ofertas exclusivas"
+    },
+    {
+      "innerText": "Elige tu plan"
+    },
+    {
+      "innerText": "Puede que te preguntes"
+    },
+    {
+      "innerText": "¿Dónde puedo conocer más sobre los diversos beneficios de Prime?"
+    },
+    {
+      "innerText": "Si no estoy satisfecho, ¿cómo puedo cancelar mi membresía Prime?"
+    },
+    {
+      "innerText": "¿Dónde puedo conocer más sobre los términos y condiciones de Prime?"
+    }
+  ],
+  "forms": [
+    {
+      "id": "nav-search-bar-form",
+      "className": "nav-searchbar nav-progressive-attribute",
+      "innerText": "Todas las categorías\nTodas las categorías\nAlexa Skills\nAlimentos y Bebidas\nAmazon Internacional\nAmazon Súper\nAudiolibros de Audible\nAuto\nBebé\nBelleza\nBelleza Premium\nDeportes y aire libre\nDispositivos de Amazon\nElectrónicos\nHecho a mano\nHerramientas y Mejoras del Hogar\nHogar y cocina\nIndustria y ciencia\nInstrumentos musicales\nJardín\nJuegos y juguetes\nLibros\nMascotas\nMúsica\nOficina y Papelería\nOtros Productos\nPelículas y Series de TV\nPlanea y Ahorra\nPrime Video\nRemates de almacén\nRopa, Zapatos y Accesorios\nRopa, zapatos y joyería para mujeres\nRopa, zapatos y joyería para hombres\nRopa, zapatos y joyería para niñas\nRopa, zapatos y joyería para niños\nRopa de bebé, zapatos y joyería\nSalud y Cuidado Personal\nSoftware\nTarjetas de Regalo\nTienda Kindle\nVideojuegos"
+    },
+    {
+      "id": "",
+      "className": "",
+      "innerText": "Continúa con Amazon Prime"
+    },
+    {
+      "id": "",
+      "className": "",
+      "innerText": "EMPIEZA TU PRUEBA GRATIS"
+    },
+    {
+      "id": "",
+      "className": "",
+      "innerText": ""
+    }
+  ],
+  "inputs": [
+    {
+      "id": "unifiedLocation1ClickAddress",
+      "className": "nav-progressive-attribute"
+    },
+    {
+      "id": "ubbShipTo",
+      "className": "nav-progressive-attribute"
+    },
+    {
+      "id": "glowValidationToken",
+      "className": "nav-progressive-attribute"
+    },
+    {
+      "id": "glowDestinationType",
+      "className": "nav-progressive-attribute"
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "twotabsearchtextbox",
+      "className": "nav-input nav-progressive-attribute"
+    },
+    {
+      "id": "nav-search-submit-button",
+      "className": "nav-input nav-progressive-attribute"
+    },
+    {
+      "id": "",
+      "className": "a-button-input"
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "RadioButtonInput1",
+      "className": ""
+    },
+    {
+      "id": "RadioButtonInput2",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": "a-button-input"
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "hiddenTextOfferDescription1",
+      "className": ""
+    },
+    {
+      "id": "hiddenTextcta1",
+      "className": ""
+    },
+    {
+      "id": "wlpData1",
+      "className": ""
+    },
+    {
+      "id": "hiddenTextOfferDescription2",
+      "className": ""
+    },
+    {
+      "id": "hiddenTextcta2",
+      "className": ""
+    },
+    {
+      "id": "wlpData2",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    }
+  ],
+  "buttons": [
+    {
+      "innerText": "Mostrar/ocultar métodos abreviados\nmayús\n+\nalt\n+\nZ",
+      "id": "nav-assist-show-shortcuts"
+    },
+    {
+      "innerText": "",
+      "id": "nav-search-submit-button"
+    },
+    {
+      "innerText": "",
+      "id": ""
+    },
+    {
+      "innerText": "",
+      "id": ""
+    },
+    {
+      "innerText": "",
+      "id": ""
+    },
+    {
+      "innerText": "",
+      "id": ""
+    },
+    {
+      "innerText": "Inicio de página",
+      "id": "navBackToTop"
+    }
+  ],
+  "selects": [
+    {
+      "id": "searchDropdownBox"
+    }
+  ],
+  "links": [
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": "Contenido principal"
+    },
+    {
+      "innerText": "Buscar\nalt\n+\n/"
+    },
+    {
+      "innerText": "Carrito\nmayús\n+\nalt\n+\nC"
+    },
+    {
+      "innerText": "Inicio\nmayús\n+\nalt\n+\nH"
+    },
+    {
+      "innerText": "Pedidos\nmayús\n+\nalt\n+\nO"
+    },
+    {
+      "innerText": ".com.mx"
+    },
+    {
+      "innerText": "Entrega en Jiutepec 62578\nActualizar ubicación"
+    },
+    {
+      "innerText": "Hola, identifícate\nCuenta y Listas"
+    },
+    {
+      "innerText": "Devoluciones\ny Pedidos"
+    },
+    {
+      "innerText": "0\nCarrito"
+    },
+    {
+      "innerText": "Identificarse"
+    },
+    {
+      "innerText": "Empieza aquí."
+    },
+    {
+      "innerText": "Crear una Wish List"
+    },
+    {
+      "innerText": "Mesa de Regalos de Bebé"
+    },
+    {
+      "innerText": "Mesa de Regalos de Boda"
+    },
+    {
+      "innerText": "Mi cuenta"
+    },
+    {
+      "innerText": "Mis pedidos"
+    },
+    {
+      "innerText": "Sigue comprando"
+    },
+    {
+      "innerText": "Mis recomendaciones"
+    },
+    {
+      "innerText": "Mi membresía Prime"
+    },
+    {
+      "innerText": "Mi Planea y Ahorra"
+    },
+    {
+      "innerText": "Membresías y suscripciones"
+    },
+    {
+      "innerText": "Mi contenido Kindle"
+    },
+    {
+      "innerText": "Mi Amazon Music"
+    },
+    {
+      "innerText": "Mi Prime Video"
+    },
+    {
+      "innerText": "Registrarte para una Cuenta de Negocios gratis"
+    },
+    {
+      "innerText": "Identificarse"
+    },
+    {
+      "innerText": "Empieza aquí."
+    },
+    {
+      "innerText": "Todo"
+    },
+    {
+      "innerText": "Mesa de Regalos"
+    },
+    {
+      "innerText": "Promociones"
+    },
+    {
+      "innerText": "Mascotas y Accesorios"
+    },
+    {
+      "innerText": "Bebé"
+    },
+    {
+      "innerText": "Deportes y aire libre"
+    },
+    {
+      "innerText": "Automotriz y Motocicletas"
+    },
+    {
+      "innerText": "Libros"
+    },
+    {
+      "innerText": "eBooks de Kindle"
+    },
+    {
+      "innerText": "Amazon Súper"
+    },
+    {
+      "innerText": "Outlet"
+    },
+    {
+      "innerText": "Música"
+    },
+    {
+      "innerText": "Prime"
+    },
+    {
+      "innerText": "Recargas"
+    },
+    {
+      "innerText": "Tarjetas de regalo"
+    },
+    {
+      "innerText": "Videojuegos"
+    },
+    {
+      "innerText": "Los más vendidos"
+    },
+    {
+      "innerText": "Hogar, Salud y Cuidado Personal"
+    },
+    {
+      "innerText": "Mejora del hogar"
+    },
+    {
+      "innerText": "Alimentos y Bebidas"
+    },
+    {
+      "innerText": "Cómputo y Tabletas"
+    },
+    {
+      "innerText": "Hogar y Cocina"
+    },
+    {
+      "innerText": "Juguetes y juegos de mesa"
+    },
+    {
+      "innerText": "Servicio al Cliente"
+    },
+    {
+      "innerText": "Electrónicos"
+    },
+    {
+      "innerText": "Belleza"
+    },
+    {
+      "innerText": "Moda"
+    },
+    {
+      "innerText": "Lo nuevo"
+    },
+    {
+      "innerText": "AmazonBasics"
+    },
+    {
+      "innerText": "Restaurantes"
+    },
+    {
+      "innerText": "Vender"
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": "Elige tu plan"
+    },
+    {
+      "innerText": "¿Tienes entre 18 y 24 años?"
+    },
+    {
+      "innerText": "¿Dónde puedo conocer más sobre los diversos beneficios de Prime?"
+    },
+    {
+      "innerText": "Si no estoy satisfecho, ¿cómo puedo cancelar mi membresía Prime?"
+    },
+    {
+      "innerText": "¿Dónde puedo conocer más sobre los términos y condiciones de Prime?"
+    },
+    {
+      "innerText": " Ver o modificar historial de búsqueda "
+    },
+    {
+      "innerText": "Trabajar en Amazon"
+    },
+    {
+      "innerText": "Acerca de Amazon"
+    },
+    {
+      "innerText": "Información corporativa"
+    },
+    {
+      "innerText": "Departamento de prensa"
+    },
+    {
+      "innerText": "Amazon Science"
+    },
+    {
+      "innerText": "Vender en Amazon"
+    },
+    {
+      "innerText": "Suministro para Amazon"
+    },
+    {
+      "innerText": "Protege y desarrolla tu marca"
+    },
+    {
+      "innerText": "Vender en Amazon Handmade"
+    },
+    {
+      "innerText": "Publica tu libro en Kindle"
+    },
+    {
+      "innerText": "Programa de afiliados"
+    },
+    {
+      "innerText": "Anuncia tus productos"
+    },
+    {
+      "innerText": "Devolver o reemplazar productos"
+    },
+    {
+      "innerText": "Gestionar contenido y dispositivos"
+    },
+    {
+      "innerText": "Alertas de revisión y de seguridad del producto"
+    },
+    {
+      "innerText": "Lista de regalos"
+    },
+    {
+      "innerText": "Ayuda"
+    },
+    {
+      "innerText": "Tarjetas de crédito y débito"
+    },
+    {
+      "innerText": "Tarjetas de regalo"
+    },
+    {
+      "innerText": "Pago en efectivo"
+    },
+    {
+      "innerText": "Pago a meses"
+    },
+    {
+      "innerText": "Pago en Quincenas"
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": "México"
+    },
+    {
+      "innerText": "Condiciones de uso"
+    },
+    {
+      "innerText": "Aviso de privacidad"
+    }
+  ],
+  "images": [
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "hveNavSwmCountdownWidget-6456835f-76a8-4f88-a0ec-0ffe83c16cab-image",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": "\n _c2xhc_slash-prime-hero-logo_18ojU\n \n"
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    }
+  ],
+  "data_asin": []
+}

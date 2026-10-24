@@ -1,0 +1,24 @@
+{
+  "requested_url": "https://api.buz.yt/login",
+  "final_url": null,
+  "http_status": null,
+  "title": "api.buz.yt",
+  "navigation_time": null,
+  "proxy_country": "mx",
+  "stealth": true,
+  "humanlike": true,
+  "bql_errors": [
+    {
+      "message": "Timeout of 30,000ms reached waiting for page navigation (requestId: 1971d452-86bc-4fe2-86c6-e5a72f38990d)",
+      "locations": [
+        {
+          "line": 2,
+          "column": 3
+        }
+      ],
+      "path": [
+        "navigation"
+      ]
+    }
+  ]
+}

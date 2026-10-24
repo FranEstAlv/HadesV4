@@ -1,0 +1,11 @@
+# Cuentas de la tienda Krispy Kreme MX para el gate /rd y /rdmass.
+# Formato: email|password  (una cuenta por linea).
+#
+# La sesion de INVITADO no sirve: el backend responde `email_invalid` y no hay
+# veredicto de tarjeta. El gate necesita cuentas con password.
+#
+# La tienda acepta maximo 3 tarjetas por cuenta: en modo masivo el gate rota
+# de cuenta cuando la anterior se llena.
+#
+# Verificado 2026-10-21: login OK (ReturnCode 200) -> veredicto real.
+dingo-bless-raven@duck.com|Ktk3YAJ#Vm59KdgPJetr

@@ -1,0 +1,37 @@
+{
+  "data": {
+    "open": {
+      "status": 200,
+      "url": "https://www.amazon.com.mx/ap/signin?openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fwww.amazon.com.mx%2Fhp%2Fwlp%2Fpipeline%2Fmembersignup%3FcampaignId%3DSlashPrime&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.assoc_handle=amzn_wlpmember_mx&openid.mode=checkid_setup&language=es_MX&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0",
+      "time": 10640
+    },
+    "emailReady": {
+      "selector": "#ap_email_login",
+      "time": 2
+    },
+    "emailTyped": {
+      "selector": "#ap_email_login",
+      "time": 5384
+    },
+    "continued": {
+      "selector": "#continue",
+      "time": 370
+    },
+    "passwordReady": {
+      "selector": "#ap_password",
+      "time": 2049
+    },
+    "passwordTyped": {
+      "selector": "#ap_password",
+      "time": 3171
+    },
+    "submitted": {
+      "selector": "#signInSubmit",
+      "time": 507
+    },
+    "settled": {
+      "time": 8000
+    },
+    "sessionCookies": "[REDACTED tras extraer]"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "headings": [
+    {
+      "innerText": "Esta página no funciona"
+    }
+  ],
+  "forms": [],
+  "inputs": [],
+  "buttons": [
+    {
+      "innerText": "Volver a cargar",
+      "id": "reload-button"
+    }
+  ],
+  "selects": [],
+  "links": [],
+  "images": [
+    {
+      "id": "offline-resources-1x",
+      "className": ""
+    },
+    {
+      "id": "offline-resources-2x",
+      "className": ""
+    }
+  ],
+  "data_asin": []
+}

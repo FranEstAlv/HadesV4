@@ -1,0 +1,101 @@
+{
+  "headings": [
+    {
+      "innerText": "Iniciar sesión"
+    }
+  ],
+  "forms": [
+    {
+      "id": "",
+      "className": "auth-validate-form auth-real-time-validation a-spacing-none",
+      "innerText": "Contraseña\n¿Has olvidado la contraseña?\nIniciar sesión"
+    },
+    {
+      "id": "",
+      "className": "",
+      "innerText": ""
+    }
+  ],
+  "inputs": [
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "ap_email",
+      "className": ""
+    },
+    {
+      "id": "ap-credential-autofill-hint",
+      "className": "a-input-text hide"
+    },
+    {
+      "id": "ap_password",
+      "className": "a-input-text a-span12 auth-autofocus auth-required-field"
+    },
+    {
+      "id": "signInSubmit",
+      "className": "a-button-input"
+    },
+    {
+      "id": "",
+      "className": ""
+    }
+  ],
+  "buttons": [
+    {
+      "innerText": "",
+      "id": "signInSubmit"
+    }
+  ],
+  "selects": [],
+  "links": [
+    {
+      "innerText": " "
+    },
+    {
+      "innerText": "\n            \n          "
+    },
+    {
+      "innerText": "Cambiar"
+    },
+    {
+      "innerText": "¿Has olvidado la contraseña?"
+    },
+    {
+      "innerText": "Condiciones de uso "
+    },
+    {
+      "innerText": "Aviso de Privacidad "
+    },
+    {
+      "innerText": "Ayuda "
+    }
+  ],
+  "images": [],
+  "data_asin": []
+}

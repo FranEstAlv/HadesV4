@@ -1,0 +1,85 @@
+{
+  "headings": [
+    {
+      "innerText": "Support ISNVD"
+    },
+    {
+      "innerText": "Support Young Radiologists"
+    },
+    {
+      "innerText": "Make Science Open"
+    },
+    {
+      "innerText": "Support Scientific Education"
+    },
+    {
+      "innerText": "Make a Donation"
+    }
+  ],
+  "forms": [],
+  "inputs": [],
+  "buttons": [
+    {
+      "innerText": "Donate",
+      "id": ""
+    }
+  ],
+  "selects": [],
+  "links": [
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": "Skip to content"
+    },
+    {
+      "innerText": "HOME"
+    },
+    {
+      "innerText": "MEMBERS"
+    },
+    {
+      "innerText": "MEETINGS"
+    },
+    {
+      "innerText": "NEWS"
+    },
+    {
+      "innerText": "PAPER"
+    },
+    {
+      "innerText": "CONTACT"
+    },
+    {
+      "innerText": "International Society for Neurovascular Disease"
+    },
+    {
+      "innerText": ""
+    }
+  ],
+  "images": [
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    }
+  ],
+  "data_asin": []
+}

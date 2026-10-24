@@ -1,0 +1,23 @@
+{
+  "headings": [
+    {
+      "innerText": "No se puede acceder a este sitio web"
+    }
+  ],
+  "forms": [],
+  "inputs": [],
+  "buttons": [],
+  "selects": [],
+  "links": [],
+  "images": [
+    {
+      "id": "offline-resources-1x",
+      "className": ""
+    },
+    {
+      "id": "offline-resources-2x",
+      "className": ""
+    }
+  ],
+  "data_asin": []
+}

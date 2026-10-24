@@ -1,0 +1,117 @@
+{
+  "basis": "static mapping of the original uploaded repository; lab endpoints remain offline",
+  "official_container_entry": {
+    "docker_cmd": "python amazon_cookie_gen.py",
+    "file": "amazon_cookie_gen.py",
+    "note": "main.py is not copied or executed by the original Dockerfile"
+  },
+  "public_http_entrypoints": [
+    {
+      "route": "GET /",
+      "function": "home",
+      "role": "service metadata"
+    },
+    {
+      "route": "GET /health",
+      "function": "health",
+      "role": "configuration/health summary"
+    },
+    {
+      "route": "POST /generate",
+      "function": "generate",
+      "role": "operational orchestration"
+    },
+    {
+      "route": "GET /diagnostic",
+      "function": "diagnostic",
+      "role": "configuration diagnostics"
+    }
+  ],
+  "generate_route_real_order": [
+    "optional Bearer API_KEY authorization",
+    "parse JSON: country/add_address/retries/force_playwright/service_preference",
+    "optional user credit check via API_BASE_URL if Authorization Bearer token present",
+    "global service-enabled check via API_BASE_URL unless caller role is admin",
+    "generate_cookie_api(...) in a dedicated asyncio event loop",
+    "deduct 4 credits via API_BASE_URL after success when user token exists"
+  ],
+  "implementation_selection": {
+    "principal_condition": "CAPSOLVER_API_KEY and HERO_SMS_API_KEY and PROXY_STRING",
+    "principal": "AmazonAccountCreator",
+    "fallback_condition": "principal condition false AND force_playwright == true",
+    "fallback": "create_amazon_account / Playwright",
+    "important": "force_playwright does NOT override the principal path when all three principal requirements are present",
+    "otherwise": "error: missing keys or proxy"
+  },
+  "principal_real_components": [
+    "generate fake profile",
+    "HeroSms provider bound in AmazonAccountCreator.__init__",
+    "curl_cffi/direct HTTP session",
+    "AWS WAF inspection/token handling",
+    "registration form submission",
+    "CAPTCHA handling biased to CapSolver",
+    "SMS OTP polling/submission",
+    "session cookie export",
+    "AccountBuilder billing address stage unless skipped",
+    "CookieConverter in API response shaping"
+  ],
+  "legacy_real_components": [
+    "Playwright Chromium headless",
+    "proxy configuration",
+    "HeroSMS and 5sim provider selection",
+    "2Captcha / AntiCaptcha / CapSolver solver functions",
+    "coordinate CAPTCHA and FunCaptcha helpers",
+    "browser registration automation",
+    "unusual-activity detection/retry logic",
+    "address automation",
+    "cookie/session extraction"
+  ],
+  "external_control_plane": [
+    {
+      "purpose": "service enable/disable",
+      "paths": [
+        "/service-status-for-generator",
+        "/admin/bot/toggle-service"
+      ],
+      "base": "API_BASE_URL"
+    },
+    {
+      "purpose": "credits",
+      "paths": [
+        "/user/credits",
+        "/user/use-credits"
+      ],
+      "base": "API_BASE_URL"
+    }
+  ],
+  "duplicated_or_legacy_structure": [
+    "main.py contains a separate AmazonAccountCreator implementation, but original Dockerfile does not copy/run main.py",
+    "amazon_cookie_gen.py contains both the principal direct-HTTP implementation and a large Playwright fallback",
+    "several synchronous/older helper functions coexist with newer async equivalents"
+  ],
+  "apparently_unreferenced_helpers": [
+    "verify_with_retry",
+    "extract_hidden_inputs",
+    "is_phone_registered",
+    "process",
+    "add_good_session",
+    "get_best_session",
+    "get_str",
+    "log_current_url",
+    "solve_2captcha_coordinates",
+    "get_phone_number_sync",
+    "get_hero_sms_code_sync",
+    "get_fivesim_code_sync",
+    "wait_for_sms_code",
+    "get_captcha_progress",
+    "block_heavy_resources",
+    "wait_for_text"
+  ],
+  "warning": "Unreferenced means no direct Python name reference was found in the original amazon_cookie_gen.py static AST; reflection/external imports could change reachability, though none were identified in the Docker entry flow.",
+  "security_observations": [
+    "original globally disables TLS certificate verification",
+    "original exposes an operational generation endpoint and optional credit/control-plane integration",
+    "no startup-time outbound connection was observed during the isolated lab tests",
+    "no local credential/file-stealing or persistence stage has been identified in the reviewed flow"
+  ]
+}

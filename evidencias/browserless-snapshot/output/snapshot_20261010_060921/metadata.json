@@ -1,0 +1,93 @@
+{
+  "requested_url": "https://www.amazon.com.mx/amazonprime?ref_=nav_cs_primelink_nonmember",
+  "final_url": null,
+  "http_status": null,
+  "title": null,
+  "navigation_time": null,
+  "proxy_country": "mx",
+  "stealth": true,
+  "humanlike": true,
+  "bql_errors": [
+    {
+      "message": "Value \"networkidle2\" does not exist in \"WaitUntilGoto\" enum. Did you mean the enum value \"networkIdle\"? (requestId: 89b394a3-c727-4b6c-8781-93ed0d0c0156)",
+      "locations": [
+        {
+          "line": 6,
+          "column": 42
+        }
+      ]
+    },
+    {
+      "message": "Cannot query field \"text\" on type \"TitleResponse\". (requestId: 89b394a3-c727-4b6c-8781-93ed0d0c0156)",
+      "locations": [
+        {
+          "line": 12,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "message": "Cannot query field \"headings\" on type \"Mutation\". (requestId: 89b394a3-c727-4b6c-8781-93ed0d0c0156)",
+      "locations": [
+        {
+          "line": 14,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "message": "Cannot query field \"forms\" on type \"Mutation\". (requestId: 89b394a3-c727-4b6c-8781-93ed0d0c0156)",
+      "locations": [
+        {
+          "line": 17,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "message": "Cannot query field \"inputs\" on type \"Mutation\". (requestId: 89b394a3-c727-4b6c-8781-93ed0d0c0156)",
+      "locations": [
+        {
+          "line": 21,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "message": "Cannot query field \"buttons\" on type \"Mutation\". (requestId: 89b394a3-c727-4b6c-8781-93ed0d0c0156)",
+      "locations": [
+        {
+          "line": 26,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "message": "Cannot query field \"selects\" on type \"Mutation\". Did you mean \"select\" or \"reject\"? (requestId: 89b394a3-c727-4b6c-8781-93ed0d0c0156)",
+      "locations": [
+        {
+          "line": 29,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "message": "Cannot query field \"links\" on type \"Mutation\". Did you mean \"click\"? (requestId: 89b394a3-c727-4b6c-8781-93ed0d0c0156)",
+      "locations": [
+        {
+          "line": 32,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "message": "Cannot query field \"images\" on type \"Mutation\". (requestId: 89b394a3-c727-4b6c-8781-93ed0d0c0156)",
+      "locations": [
+        {
+          "line": 36,
+          "column": 3
+        }
+      ]
+    }
+  ]
+}

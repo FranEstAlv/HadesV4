@@ -1,0 +1,621 @@
+{
+  "headings": [
+    {
+      "innerText": "Saltar a"
+    },
+    {
+      "innerText": "Métodos abreviados de teclado"
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": "Envíos GRATIS ilimitados"
+    },
+    {
+      "innerText": "Prime Video"
+    },
+    {
+      "innerText": "Amazon Music Prime"
+    },
+    {
+      "innerText": "Selecciona un método de pago"
+    },
+    {
+      "innerText": "Agregar un método de pago"
+    },
+    {
+      "innerText": "Tarjetas de regalo y códigos promocionales"
+    },
+    {
+      "innerText": "Tarjetas de crédito o débito"
+    }
+  ],
+  "forms": [
+    {
+      "id": "nav-search-bar-form",
+      "className": "nav-searchbar nav-progressive-attribute",
+      "innerText": "Todas las categorías\nTodas las categorías\nAlexa Skills\nAlimentos y Bebidas\nAmazon Internacional\nAmazon Súper\nAudiolibros de Audible\nAuto\nBebé\nBelleza\nBelleza Premium\nDeportes y aire libre\nDispositivos de Amazon\nElectrónicos\nHecho a mano\nHerramientas y Mejoras del Hogar\nHogar y cocina\nIndustria y ciencia\nInstrumentos musicales\nJardín\nJuegos y juguetes\nLibros\nMascotas\nMúsica\nOficina y Papelería\nOtros Productos\nPelículas y Series de TV\nPlanea y Ahorra\nPrime Video\nRemates de almacén\nRopa, Zapatos y Accesorios\nRopa, zapatos y joyería para mujeres\nRopa, zapatos y joyería para hombres\nRopa, zapatos y joyería para niñas\nRopa, zapatos y joyería para niños\nRopa de bebé, zapatos y joyería\nSalud y Cuidado Personal\nSoftware\nTarjetas de Regalo\nTienda Kindle\nVideojuegos"
+    },
+    {
+      "id": "pp-ufq6ax-63",
+      "className": "pmts-select-payment-instrument-form",
+      "innerText": "Tu saldo disponible\nUsar el saldo de la tarjeta de regalo siempre que esté disponible\nUsar el saldo de la tarjeta de regalo siempre que esté disponible\nTus servicios de pago\nContinuar"
+    },
+    {
+      "id": "",
+      "className": "pmts-add-payment-instrument-form  a-spacing-none",
+      "innerText": "Tarjetas de regalo y códigos promocionales\nIngresa un código de tarjeta de regalo o de promoción"
+    },
+    {
+      "id": "prime-payments-wlp-offer-change-form",
+      "className": "",
+      "innerText": ""
+    },
+    {
+      "id": "prime-payments-wlp-mcb-form",
+      "className": "",
+      "innerText": ""
+    },
+    {
+      "id": "prime-payments-wlp-mfa-form",
+      "className": "",
+      "innerText": ""
+    },
+    {
+      "id": "wlp-signup-form",
+      "className": "\n _cHJpb_wlp-signup-form-form_1G4nK\n \n",
+      "innerText": "Prueba Prime gratis por 30 díasNo, gracias."
+    },
+    {
+      "id": "",
+      "className": "",
+      "innerText": ""
+    }
+  ],
+  "inputs": [
+    {
+      "id": "unifiedLocation1ClickAddress",
+      "className": "nav-progressive-attribute"
+    },
+    {
+      "id": "ubbShipTo",
+      "className": "nav-progressive-attribute"
+    },
+    {
+      "id": "glowValidationToken",
+      "className": "nav-progressive-attribute"
+    },
+    {
+      "id": "glowDestinationType",
+      "className": "nav-progressive-attribute"
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "twotabsearchtextbox",
+      "className": "nav-input nav-progressive-attribute"
+    },
+    {
+      "id": "nav-search-submit-button",
+      "className": "nav-input nav-progressive-attribute"
+    },
+    {
+      "id": "",
+      "className": "a-button-input"
+    },
+    {
+      "id": "",
+      "className": "pmts-portal-component pmts-portal-components-pp-ufq6ax-3 pmts-class-dcca2821"
+    },
+    {
+      "id": "",
+      "className": "pmts-portal-component pmts-portal-components-pp-ufq6ax-3 pmts-class-dcca2821"
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "pp-ufq6ax-66",
+      "className": ""
+    },
+    {
+      "id": "pp-ufq6ax-68",
+      "className": ""
+    },
+    {
+      "id": "pp-ufq6ax-77",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": "a-button-input"
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "pp-ufq6ax-85",
+      "className": "a-input-text a-form-normal a-width-medium pmts-claim-code"
+    },
+    {
+      "id": "",
+      "className": "a-button-input"
+    },
+    {
+      "id": "",
+      "className": "a-button-input"
+    },
+    {
+      "id": "",
+      "className": "a-button-input"
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    }
+  ],
+  "buttons": [
+    {
+      "innerText": "Mostrar/ocultar métodos abreviados\nmayús\n+\nalt\n+\nZ",
+      "id": "nav-assist-show-shortcuts"
+    },
+    {
+      "innerText": "",
+      "id": "nav-search-submit-button"
+    },
+    {
+      "innerText": "",
+      "id": ""
+    },
+    {
+      "innerText": "",
+      "id": ""
+    },
+    {
+      "innerText": "",
+      "id": ""
+    },
+    {
+      "innerText": "",
+      "id": ""
+    },
+    {
+      "innerText": "",
+      "id": ""
+    },
+    {
+      "innerText": "",
+      "id": ""
+    },
+    {
+      "innerText": "Agregar una tarjeta de crédito o débito",
+      "id": ""
+    },
+    {
+      "innerText": "",
+      "id": ""
+    },
+    {
+      "innerText": "",
+      "id": ""
+    },
+    {
+      "innerText": "Inicio de página",
+      "id": "navBackToTop"
+    }
+  ],
+  "selects": [
+    {
+      "id": "searchDropdownBox"
+    }
+  ],
+  "links": [
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": "Contenido principal"
+    },
+    {
+      "innerText": "Buscar\nalt\n+\n/"
+    },
+    {
+      "innerText": "Carrito\nmayús\n+\nalt\n+\nC"
+    },
+    {
+      "innerText": "Inicio\nmayús\n+\nalt\n+\nH"
+    },
+    {
+      "innerText": "Pedidos\nmayús\n+\nalt\n+\nO"
+    },
+    {
+      "innerText": ".com.mx"
+    },
+    {
+      "innerText": "Enviar a Michael\nKabul 1001‌"
+    },
+    {
+      "innerText": "Hola Ángela\nCuenta y Listas"
+    },
+    {
+      "innerText": "Devoluciones\ny Pedidos"
+    },
+    {
+      "innerText": "0\nCarrito"
+    },
+    {
+      "innerText": "Crear una Wish List"
+    },
+    {
+      "innerText": "Mesa de Regalos de Bebé"
+    },
+    {
+      "innerText": "Mesa de Regalos de Boda"
+    },
+    {
+      "innerText": "Tus libros guardados"
+    },
+    {
+      "innerText": "Cambiar cuentas"
+    },
+    {
+      "innerText": "Cerrar sesión"
+    },
+    {
+      "innerText": "Mi cuenta"
+    },
+    {
+      "innerText": "Mis pedidos"
+    },
+    {
+      "innerText": "Sigue comprando"
+    },
+    {
+      "innerText": "Mis recomendaciones"
+    },
+    {
+      "innerText": "Devoluciones"
+    },
+    {
+      "innerText": "Alertas de revisión y de seguridad del producto"
+    },
+    {
+      "innerText": "Mi membresía Prime"
+    },
+    {
+      "innerText": "Mi Planea y Ahorra"
+    },
+    {
+      "innerText": "Membresías y suscripciones"
+    },
+    {
+      "innerText": "Mi contenido Kindle"
+    },
+    {
+      "innerText": "Mi Amazon Music"
+    },
+    {
+      "innerText": "Mi Prime Video"
+    },
+    {
+      "innerText": "Registrarte para una Cuenta de Negocios gratis"
+    },
+    {
+      "innerText": "Todo"
+    },
+    {
+      "innerText": "Vender"
+    },
+    {
+      "innerText": "Restaurantes"
+    },
+    {
+      "innerText": "Mesa de Regalos"
+    },
+    {
+      "innerText": "Promociones"
+    },
+    {
+      "innerText": "Planea y Ahorra"
+    },
+    {
+      "innerText": "Mascotas y Accesorios"
+    },
+    {
+      "innerText": "Bebé"
+    },
+    {
+      "innerText": "Deportes y aire libre"
+    },
+    {
+      "innerText": "Automotriz y Motocicletas"
+    },
+    {
+      "innerText": "Libros"
+    },
+    {
+      "innerText": "eBooks de Kindle"
+    },
+    {
+      "innerText": "Amazon Súper"
+    },
+    {
+      "innerText": "Outlet"
+    },
+    {
+      "innerText": "Música"
+    },
+    {
+      "innerText": "Prime"
+    },
+    {
+      "innerText": "Recargas"
+    },
+    {
+      "innerText": "Tarjetas de regalo"
+    },
+    {
+      "innerText": "Videojuegos"
+    },
+    {
+      "innerText": "Los más vendidos"
+    },
+    {
+      "innerText": "Hogar, Salud y Cuidado Personal"
+    },
+    {
+      "innerText": "Mejora del hogar"
+    },
+    {
+      "innerText": "Alimentos y Bebidas"
+    },
+    {
+      "innerText": "Cómputo y Tabletas"
+    },
+    {
+      "innerText": "Hogar y Cocina"
+    },
+    {
+      "innerText": "Juguetes y juegos de mesa"
+    },
+    {
+      "innerText": "Servicio al Cliente"
+    },
+    {
+      "innerText": "Electrónicos"
+    },
+    {
+      "innerText": "Belleza"
+    },
+    {
+      "innerText": "Historial de búsqueda"
+    },
+    {
+      "innerText": "Moda"
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": "Más información"
+    },
+    {
+      "innerText": "Paga en OXXO, 7-Eleven, +5 tiendas"
+    },
+    {
+      "innerText": "Ingresa un código de tarjeta de regalo o de promoción"
+    },
+    {
+      "innerText": "Agregar una tarjeta de crédito o débito"
+    },
+    {
+      "innerText": " Contactar con servicio al cliente"
+    },
+    {
+      "innerText": "No, gracias."
+    },
+    {
+      "innerText": "Términos y condiciones de Amazon Prime"
+    },
+    {
+      "innerText": "cancelar"
+    },
+    {
+      "innerText": "Tus Membresías y Suscripciones"
+    },
+    {
+      "innerText": "Trabajar en Amazon"
+    },
+    {
+      "innerText": "Acerca de Amazon"
+    },
+    {
+      "innerText": "Información corporativa"
+    },
+    {
+      "innerText": "Departamento de prensa"
+    },
+    {
+      "innerText": "Amazon Science"
+    },
+    {
+      "innerText": "Vender en Amazon"
+    },
+    {
+      "innerText": "Suministro para Amazon"
+    },
+    {
+      "innerText": "Protege y desarrolla tu marca"
+    },
+    {
+      "innerText": "Vender en Amazon Handmade"
+    },
+    {
+      "innerText": "Publica tu libro en Kindle"
+    },
+    {
+      "innerText": "Programa de afiliados"
+    },
+    {
+      "innerText": "Anuncia tus productos"
+    },
+    {
+      "innerText": "Devolver o reemplazar productos"
+    },
+    {
+      "innerText": "Gestionar contenido y dispositivos"
+    },
+    {
+      "innerText": "Alertas de revisión y de seguridad del producto"
+    },
+    {
+      "innerText": "Lista de regalos"
+    },
+    {
+      "innerText": "Ayuda"
+    },
+    {
+      "innerText": "Tarjetas de crédito y débito"
+    },
+    {
+      "innerText": "Tarjetas de regalo"
+    },
+    {
+      "innerText": "Pago en efectivo"
+    },
+    {
+      "innerText": "Pago a meses"
+    },
+    {
+      "innerText": "Pago en Quincenas"
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": "México"
+    },
+    {
+      "innerText": "Condiciones de uso"
+    },
+    {
+      "innerText": "Aviso de privacidad"
+    }
+  ],
+  "images": [
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "hveNavSwmCountdownWidget-4bc2bc3f-eef5-4f6a-b7b6-4256095e582e-image",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": "pmts-loading-async-widget-spinner-centered"
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": "pmts-pay-select-redeem-claim-code-gc-logo"
+    }
+  ],
+  "data_asin": []
+}

@@ -1,0 +1,12 @@
+{
+  "step": "prime_fresh",
+  "requested_url": "https://www.amazon.com.mx/hp/wlp/pipeline/membersignup?campaignId=SlashPrime",
+  "initial_navigation_status": 200,
+  "initial_navigation_url": "https://www.amazon.com.mx/ap/signin?openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fwww.amazon.com.mx%2Fhp%2Fwlp%2Fpipeline%2Fmembersignup%3FcampaignId%3DSlashPrime&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.assoc_handle=amzn_wlpmember_mx&openid.mode=checkid_setup&language=es_MX&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0",
+  "initial_navigation_time": 8335,
+  "title": "Únete a Prime hoy",
+  "proxy_country": "mx",
+  "stealth": true,
+  "humanlike": true,
+  "bql_errors": []
+}

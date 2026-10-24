@@ -1,0 +1,205 @@
+{
+  "headings": [
+    {
+      "innerText": "MY ACCOUNT"
+    },
+    {
+      "innerText": "LOGIN"
+    },
+    {
+      "innerText": "REGISTER"
+    }
+  ],
+  "forms": [
+    {
+      "id": "",
+      "className": "woocommerce-form woocommerce-form-login login",
+      "innerText": "Username Or Email Address *\n\nPassword *\n\n Remember Me\nLOG IN\n\nLost your password?"
+    },
+    {
+      "id": "",
+      "className": "woocommerce-form woocommerce-form-register register",
+      "innerText": "Email Address *\n\nA password will be sent to your email address.\n\nYour personal data will be used to support your experience throughout this website, to manage access to your account, and for other purposes described in our privacy policy.\n\nREGISTER"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "username",
+      "className": "woocommerce-Input woocommerce-Input--text input-text"
+    },
+    {
+      "id": "password",
+      "className": "woocommerce-Input woocommerce-Input--text input-text"
+    },
+    {
+      "id": "rememberme",
+      "className": "woocommerce-form__input woocommerce-form__input-checkbox"
+    },
+    {
+      "id": "woocommerce-login-nonce",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "reg_email",
+      "className": "woocommerce-Input woocommerce-Input--text input-text"
+    },
+    {
+      "id": "woocommerce-register-nonce",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    }
+  ],
+  "buttons": [
+    {
+      "innerText": "",
+      "id": "responsive-menu-button"
+    },
+    {
+      "innerText": "LOG IN",
+      "id": ""
+    },
+    {
+      "innerText": "REGISTER",
+      "id": ""
+    }
+  ],
+  "selects": [],
+  "links": [
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": "wholesale / business"
+    },
+    {
+      "innerText": "Loo & Behold – UK’s Poshest Toilet Rolls"
+    },
+    {
+      "innerText": "Terms & Conditions"
+    },
+    {
+      "innerText": "Cookies & Privacy Policy"
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": "Toilet Tissue"
+    },
+    {
+      "innerText": "Business / Wholesale"
+    },
+    {
+      "innerText": "About"
+    },
+    {
+      "innerText": "FAQs"
+    },
+    {
+      "innerText": "Contact"
+    },
+    {
+      "innerText": "Blog"
+    },
+    {
+      "innerText": "Lost your password?"
+    },
+    {
+      "innerText": "privacy policy"
+    },
+    {
+      "innerText": "About"
+    },
+    {
+      "innerText": "Basket"
+    },
+    {
+      "innerText": "Blog"
+    },
+    {
+      "innerText": "Checkout"
+    },
+    {
+      "innerText": "Contact"
+    },
+    {
+      "innerText": "Cookies & Privacy Policy"
+    },
+    {
+      "innerText": "Frequently Asked Questions"
+    },
+    {
+      "innerText": "Home"
+    },
+    {
+      "innerText": "My Account"
+    },
+    {
+      "innerText": "Shop"
+    },
+    {
+      "innerText": "Terms & Conditions"
+    }
+  ],
+  "images": [
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    }
+  ],
+  "data_asin": []
+}

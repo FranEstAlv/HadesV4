@@ -1,0 +1,25 @@
+{
+  "requested_url": "https://www.amazon.com.mx/amazonprime?ref_=nav_cs_primelink_nonmember",
+  "final_url": "https://www.amazon.com.mx/amazonprime?ref_=nav_cs_primelink_nonmember",
+  "http_status": 200,
+  "title": "Amazon.com.mx: Amazon Prime - Te regalamos 30 días de Prime",
+  "navigation_time": 15506,
+  "proxy_country": "mx",
+  "stealth": true,
+  "humanlike": true,
+  "bql_errors": [
+    {
+      "message": "String cannot represent value: {} (requestId: 4b1f8b3f-55e4-4254-98cc-22ba9114932e)",
+      "locations": [
+        {
+          "line": 5,
+          "column": 5
+        }
+      ],
+      "path": [
+        "linkHrefs",
+        "value"
+      ]
+    }
+  ]
+}

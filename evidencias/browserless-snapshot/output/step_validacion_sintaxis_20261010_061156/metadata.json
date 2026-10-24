@@ -1,0 +1,49 @@
+{
+  "step": "validacion_sintaxis",
+  "requested_url": "https://example.com",
+  "initial_navigation_status": 200,
+  "initial_navigation_url": "https://example.com/",
+  "initial_navigation_time": 4106,
+  "title": "Example Domain",
+  "proxy_country": "mx",
+  "stealth": true,
+  "humanlike": true,
+  "bql_errors": [
+    {
+      "message": "Timeout of 20000ms reached waiting for DOM selector \"#ap_email_login\" (requestId: b7fc01b8-c8e1-45d6-83d3-35161bf82198)",
+      "locations": [
+        {
+          "line": 2,
+          "column": 3
+        }
+      ],
+      "path": [
+        "emailReady"
+      ]
+    },
+    {
+      "message": "Timeout of 30000ms reached waiting for DOM selector \"#ap_email_login\" (requestId: b7fc01b8-c8e1-45d6-83d3-35161bf82198)",
+      "locations": [
+        {
+          "line": 2,
+          "column": 3
+        }
+      ],
+      "path": [
+        "emailTyped"
+      ]
+    },
+    {
+      "message": "Timeout of 30000ms reached waiting for DOM selector \"#continue\" (requestId: b7fc01b8-c8e1-45d6-83d3-35161bf82198)",
+      "locations": [
+        {
+          "line": 2,
+          "column": 3
+        }
+      ],
+      "path": [
+        "continued"
+      ]
+    }
+  ]
+}

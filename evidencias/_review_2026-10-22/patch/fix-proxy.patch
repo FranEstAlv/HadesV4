@@ -1,0 +1,126 @@
+--- a/GenCookie/accountCreator.py
++++ b/GenCookie/accountCreator.py
+@@ -16,7 +16,7 @@
+ """
+ import logging
+ import os ,re ,random ,secrets ,time ,types
+-from urllib .parse import urljoin ,unquote ,quote ,quote_plus
++from urllib .parse import urljoin ,unquote ,quote ,quote_plus ,urlparse
+ from concurrent .futures import ThreadPoolExecutor ,wait
+ from bs4 import BeautifulSoup
+ from faker import Faker
+@@ -185,11 +185,29 @@
+     return (deduped ,hashes )
+ 
+ def normalizeProxy (proxy ):
+-    """Normaliza la proxy al formato http://usuario:pass@host:puerto."""
++    """Normaliza la proxy al formato http://usuario:pass@host:puerto.
++
++    Acepta los tres formatos que hay en circulacion:
++      - host:port@usuario:pass[_params]   (formato IPRoyal del .env)
++      - host:port:usuario:pass             (cuatro campos separados por ':')
++      - scheme://usuario:pass@host:port    (ya normalizada)
++
++    El formato IPRoyal trae los parametros (_country-mx, _session-xxx,
++    _lifetime-3m) dentro de la CONTRASENA, y el orden host:port@user:pass
++    invertido hace que curl rechace la URL con "Unsupported proxy syntax".
++    """
+     if not proxy :return None
+     proxy =proxy .strip ()
+-    if '://'in proxy :return proxy
+-    if '@'in proxy :return f'http://{proxy }'
++    if '://'in proxy :
++        try :
++            u =urlparse (proxy )
++            if not u .username or not u .hostname or not u .port :return proxy
++            return f'{u .scheme }://{u .username }:{u .password or ""}@{u .hostname }:{u .port }'
++        except Exception :
++            return proxy
++    if '@'in proxy :
++        host_port ,creds =proxy .split ('@',1)
++        return f'http://{creds }@{host_port }'
+     parts =proxy .split (':')
+     if len (parts )>=4 and parts [1 ].isdigit ():
+         return f'http://{parts [2 ]}:{":".join (parts [3 :])}@{parts [0 ]}:{parts [1 ]}'
+@@ -203,11 +221,16 @@
+     return re .sub (r'([-_])country-[A-Za-z]{2}',lambda m :f'{m .group (1 )}country-{country .lower ()}',proxy ,count =1 ,flags =re .I )
+ 
+ def rotateProxySession (proxy ):
+-    """Genera una nueva sesion de proxy para cambiar IP dentro del mismo pais."""
++    """Genera una nueva sesion de proxy para cambiar IP dentro del mismo pais.
++
++    Solo se reemplaza el identificador de sesion. La version anterior usaba
++    una clase de caracteres gulosa y se comia '_lifetime-3m' y '_streaming-1',
++    dejando la proxy sin lifetime para toda la sesion.
++    """
+     if not proxy :return proxy
+-    session_id =secrets .token_hex (8 )
+-    proxy =re .sub (r'_session-[A-Za-z0-9_-]+',f'_session-{session_id }',proxy )
+-    return re .sub (r'-session-[A-Za-z0-9_-]+',f'-session-{session_id }',proxy )
++    session_id =secrets .token_hex (8)
++    proxy =re .sub (r'(_session-)[A-Za-z0-9]+',lambda m :f'{m .group (1 )}{session_id }',proxy )
++    return re .sub (r'(-session-)[A-Za-z0-9]+',lambda m :f'{m .group (1 )}{session_id }',proxy )
+ 
+ def isAuth (sess ):
+     """True si la sesion ya quedo autenticada (cookies at-main / at-acb)."""
+--- a/GenCookie/cvfSolver.py
++++ b/GenCookie/cvfSolver.py
+@@ -16,7 +16,7 @@
+ import time
+ from pathlib import Path
+ from typing import Dict, Optional, Tuple
+-from urllib.parse import quote, unquote, urljoin
++from urllib.parse import quote, unquote, urljoin, urlparse
+ 
+ from bs4 import BeautifulSoup
+ 
+@@ -372,25 +372,35 @@
+ 
+ 
+ def _proxy_parts(proxy):
+-    """Convierte una cadena de proxy en los campos que espera 2Captcha."""
++    """Convierte una cadena de proxy en los campos que espera 2Captcha.
++
++    Acepta 'scheme://user:pass@host:port' y 'host:port@user:pass' (IPRoyal).
++    La version anterior asumia siempre el primer formato y, con el segundo,
++    mandaba al solver un host inexistente -> ERROR_CAPTCHA_UNSOLVABLE.
++    """
+     if not proxy:
+         return None
+-    m = re.match(
+-        r"^(?:(?P<scheme>https?)://)?"
+-        r"(?:(?P<user>[^:@/]+):(?P<pwd>[^@/]*)@)?"
+-        r"(?P<host>[^:/@]+)(?::(?P<port>\d+))?",
+-        proxy.strip(),
+-    )
+-    if not m:
++    p = proxy.strip()
++    if "://" not in p:
++        if "@" in p:
++            host_port, creds = p.split("@", 1)
++            p = "http://" + creds + "@" + host_port
++        else:
++            p = "http://" + p
++    try:
++        u = urlparse(p)
++        if not u.hostname or not u.port:
++            return None
++    except Exception:
+         return None
+     out = {
+         "proxyType": "http",
+-        "proxyAddress": m.group("host"),
+-        "proxyPort": int(m.group("port") or 80),
+-    }
+-    if m.group("user"):
+-        out["proxyLogin"] = m.group("user")
+-        out["proxyPassword"] = m.group("pwd") or ""
++        "proxyAddress": u.hostname,
++        "proxyPort": int(u.port),
++    }
++    if u.username:
++        out["proxyLogin"] = u.username
++        out["proxyPassword"] = u.password or ""
+     return out
+ 
+ 

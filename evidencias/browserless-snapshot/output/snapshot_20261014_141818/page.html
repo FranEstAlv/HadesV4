@@ -1,0 +1,387 @@
+<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"><head><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="-1">
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="Keywords" content="International Society for Neurovascular Disease, ISNVD, isnvd.org">
+<meta name="Description" content="">
+<meta name="Author" content="ISNVD">
+<meta property="og:url" content="https://isnvd.org">
+<meta property="og:title" content="International Society for Neurovascular Disease">
+<meta property="og:description" content="International Society for Neurovascular Disease">
+<meta property="og:image" content="https://isnvd.org/images/logo_og.jpg">
+
+<title>ISNVD</title>
+<link rel="shortcut icon" href="images/favicon.ico">
+<link href="css/style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery.responsive-nav.js"></script>
+<link href="css/jquery.responsive-nav.css" rel="stylesheet" type="text/css">
+<script src="https://checkout.clover.com/sdk.js"></script>
+<script type="text/javascript">
+	$(document).ready(function(){
+	  $('#global-nav ul li a').click(function(){
+		$('#global-nav li a').removeClass("active");
+		$(this).addClass("active");
+	});
+	});
+	jQuery( function( $ ) {
+		$( '#global-nav' ).responsive_nav();
+		$('#responsive-btn').on('click', function(e) {
+			e.stopPropagation();
+			$('#branding').toggleClass('menu-open');
+		});
+		$('html').on('click', function() {
+			if($('#branding').hasClass('menu-open')) {
+				setTimeout(function() {
+					$('#branding').removeClass('menu-open');
+				}, 200);
+			}
+		});
+	});
+</script>
+<style>
+	#global-nav {
+		position: relative;
+		margin-top: 6px;
+	}
+	#global-nav ul{
+		display: inline;
+		margin: 0;
+		padding: 0;
+	}
+	#global-nav ul li {
+		display: inline-block;
+		position: relative;
+	}
+	@media only screen and ( max-width: 935px ) {
+		#responsive-btn {
+			display: block;
+			position: absolute;
+			left: 15px;
+			top: -25px;
+		}
+		#responsive-nav-wrapper {
+			height: 35px;
+			overflow: visible;
+		}
+		#wrapper {
+			height: auto !important;
+		}
+		#branding {
+			position: relative;
+		}
+		#branding.menu-open {
+			min-height: 250px !important;
+		}
+		#global-nav {
+			margin-top: 0;
+		}	
+		pre {
+			overflow: hidden;
+		}
+		.logo img{
+			top:5px;
+			background-image:url("images/logomobile.png");
+			background-repeat: no-repeat;
+			width:90px;
+			left:100px;
+			background-size: contain;
+			position:absolute;
+			content-visibility: hidden;
+		}	
+		#banner {
+			display:none;
+		}
+		#spacing{
+			min-height: 0px;
+		}
+		#divtop {
+			float: none !important;
+			position: relative !important;
+			top: 30px !important;
+			text-align: left;
+			margin-top: 5px;
+			padding-left: 15px;
+			z-index: 1000;	
+		}
+		/* Make form fields fluid on mobile */
+		#myform3 input[type="text"],
+		#myform3 input[type="email"],
+		#myform3 select {
+			width: 100%;
+			box-sizing: border-box;
+		}
+    div[style*="display:flex"],
+    div[style*="display: flex"] {
+        flex-direction: column !important;
+    }
+    
+    div[style*="flex:1"],
+    div[style*="flex: 1"],
+    div[style*="width:280px"],
+    div[style*="width: 280px"] {
+        width: 100% !important;
+        flex: none !important;
+    }
+	
+	}
+    .clover-footer {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        text-align: center !important;
+        font-size: 11px !important;
+        background: #f9f9f9 !important;
+        padding: 4px 0 !important;
+        border-top: 1px solid #eee !important;
+        z-index: 9999 !important;
+    }
+    .clover-field-wrapper {
+        height: 25px;
+        overflow: hidden;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        background: white;
+		margin-top: -22px;
+    }
+    .clover-field-wrapper iframe {
+        width: 100%;
+        height: 25px !important;
+        border: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block;
+    }
+    #card-errors {
+        color: #e74c3c;
+        font-size: 13px;
+        margin-top: 6px;
+    }
+	.secure-badge {
+		font-size: 11px;
+		font-weight: normal;
+		color: #2e7d32;
+		background: #f1f8f1;
+		padding: 8px 6px;
+		vertical-align: middle;
+	}
+	.card-section-title {
+		font-weight: bold;
+		margin: 10px 0 6px 0;
+		border-top: 1px solid #ddd;
+		padding-top: 10px;
+		font-size: 14px;
+	}	
+	.off-canvas-nav .skip-link {
+		display: none !important;
+	}	
+</style>
+</head>
+<body>
+<div id="topline"></div>    
+
+<div id="wrapper" class="hfeed">
+	<div id="branding">
+		<div class="logo"><a href="home" title="International Society for Neurovascular Disease"><img src="images/logo.png" width="200px" height="86px"></a></div>
+		<div class="donate"><a href="donate" title="Donate"><img src="images/donate.png" width="100px" height="34px"></a></div>					
+		<div class="login"><a href="join" title="Join"><img src="images/join.png" width="100px" height="34px"></a></div>
+		<div id="spacing"></div>
+		<div id="divtop"><p style="margin-bottom:10px;" align="right">&nbsp;</p></div>				
+		<div id="responsive-nav-wrapper">
+		<div id="responsive-btn"></div>				
+		<div id="global-nav" class="responsive-nav">
+			<div class="skip-link"><a href="#content" title="Skip navigation to the content">Skip to content</a></div>
+			<div class="menu"><ul class="sf-menu">
+
+			<li class="page_item page-item-8">			<a href="home" title="Home">Home</a></li>
+
+			<li class="page_item page-item-2">					
+			<a href="ecmembers" title="EC Members">Members</a></li>
+							
+			<li class="page_item page-item-467">			<a href="meetings" title="Meetings">Meetings</a></li>
+
+			<li class="page_item page-item-11">					
+			<a href="news" title="News &amp; Events">News</a></li>
+
+
+
+			<li class="page_item page-item-13">				
+			<a href="paper" title="Paper">Paper</a></li><!--Position Paper-->					
+
+			<li class="page_item page-item-13">			<a href="contact" title="Contact">Contact</a></li>
+			</ul>
+			</div>
+		</div>
+		</div>
+    </div><!-- #header-->
+    
+    <div id="main">
+		<script src="https://zeffy-scripts.s3.ca-central-1.amazonaws.com/embed-form-script.min.js"></script>
+
+<style>
+.donate-page {
+	max-width: 1180px;
+	margin: 0 auto;
+	padding: 0 18px 30px;
+	box-sizing: border-box;
+}
+
+.donate-intro {
+	margin: 0 0 24px;
+	padding: 22px 24px;
+	border-top: 4px solid #dea953;
+	background: #f7f7f7;
+	box-shadow: 0 1px 5px rgba(0,0,0,.08);
+	box-sizing: border-box;
+}
+
+.donate-intro h2 {
+	margin: 0 0 10px;
+	color: #8a570b;
+	font-size: 26px;
+}
+
+.donate-intro p {
+	margin: 0;
+	color: #333;
+	font-size: 16px;
+	line-height: 1.55;
+}
+
+.donate-zeffy {
+	margin-top: 24px;
+	padding: 22px 24px;
+	border-left: 4px solid #dea953;
+	background: #f7f7f7;
+	box-sizing: border-box;
+}
+
+.donate-zeffy h2 {
+	margin: 0 0 10px;
+	color: #8a570b;
+	font-size: 24px;
+}
+
+.donate-zeffy p {
+	margin: 0;
+	color: #333;
+	font-size: 15px;
+	line-height: 1.55;
+}
+
+.donate-button {
+	margin-top: 14px;
+	padding: 12px 22px;
+	border: 0;
+	background: #8a570b;
+	color: #fff;
+	font-size: 18px;
+	font-weight: bold;
+	cursor: pointer;
+}
+
+.donate-button:hover,
+.donate-button:focus {
+	background: #6f470c;
+}
+
+
+.donate-impact-grid {
+ display: grid;
+ grid-template-columns: repeat(3, minmax(0, 1fr));
+ gap: 20px;
+ margin-bottom: 18px;
+}
+.donate-impact-card {
+ padding: 24px;
+ border: 1px solid #e7ded0;
+ border-top: 4px solid #dea953;
+ background: #fff;
+ box-shadow: 0 2px 8px rgba(0,0,0,.06);
+ box-sizing: border-box;
+}
+.donate-impact-card h3 {
+ margin: 0 0 12px;
+ color: #8a570b;
+ font-size: 22px;
+ line-height: 1.25;
+}
+.donate-impact-card p {
+ margin: 0 0 12px;
+ color: #333;
+ font-size: 15px;
+ line-height: 1.6;
+}
+.donate-impact-card p:last-child { margin-bottom: 0; }
+.donate-impact-card .donate-impact-lead { font-size: 16px; }
+.donate-impact-note {
+ margin: 0;
+ color: #555;
+ font-size: 14px;
+ line-height: 1.55;
+}
+
+@media only screen and (max-width: 760px) {
+	.donate-impact-grid { grid-template-columns: 1fr; gap: 16px; }
+	.donate-page {
+		padding-right: 12px;
+		padding-left: 12px;
+	}
+}
+</style>
+
+<div id="container">
+<div id="content">
+<div class="donate-page">
+
+<div class="donate-intro">
+	<h2>Support ISNVD</h2>
+	<p>Your support helps ISNVD advance scientific exchange, education and research in neurovascular disease.</p>
+</div>
+
+<div class="donate-impact-grid">
+ <div class="donate-impact-card">
+  <h3>Support Young Radiologists</h3>
+  <p class="donate-impact-lead">Help early-career radiologists attend the <strong>ISNVD Annual Meeting</strong>.</p>
+  <p>Your donation can help cover congress registration for junior radiologists selected through ISNVD participation initiatives, opening access to scientific sessions, education and international networking.
+ </p></div>
+ <div class="donate-impact-card">
+  <h3>Make Science Open</h3>
+  <p class="donate-impact-lead">Help make ISNVD <strong>consensus publications freely accessible</strong>.</p>
+  <p>Donations can contribute to open-access publication costs for ISNVD consensus papers, guidelines and scientific initiatives, helping make their results available to clinicians and researchers worldwide.</p>
+ </div>
+ <div class="donate-impact-card">
+  <h3>Support Scientific Education</h3>
+  <p class="donate-impact-lead">Help deliver <strong>scientific education throughout the year</strong>.</p>
+  <p>Your support helps ISNVD organize educational webinars, scientific meetings and multidisciplinary initiatives connecting clinicians, researchers and technology experts in neurovascular disease.</p>
+ </div>
+</div>
+<p class="donate-impact-note">These are examples of how your support can make a difference. Donations help ISNVD advance its scientific, educational and nonprofit mission where support is most needed.</p>
+
+<div class="donate-zeffy">
+	<h2>Make a Donation</h2>
+	<p><strong>Payments are securely processed through Zeffy.</strong><br>
+	Before completing your payment, please check the total amount.<br>
+	The additional contribution to support Zeffy’s platform is entirely optional: if you do not wish to add anything, select “Other” and enter 0. Then confirm that the final total is correct before paying.</p>
+
+	<button class="donate-button" zeffy-form-link="https://www.zeffy.com/embed/donation-form/support-isnvd?modal=true">Donate</button>
+</div>
+
+</div>
+</div><!-- #content -->
+</div><!-- #container -->
+
+	</div>
+	<!-- #main -->
+
+<div id="footer">
+	<div id="siteinfo">        
+
+Copyright © <span class="the-year">2026</span> <a href="index.php?site=home" title="International Society for Neurovascular Disease">International Society for Neurovascular Disease</a>. All Rights Reserved.<br>
+<a href="https://www.linkedin.com/company/isnvd" target="_blank"><img src="images/LI-In-Bug.png" height="21px"></a>
+	</div><!-- #siteinfo -->
+	   
+</div><!-- #footer -->
+</div><!-- #wrapper .hfeed -->
+
+<div aria-hidden="true" style="display: none; position: fixed; inset: 0px; background-color: rgba(0, 0, 0, 0.5); z-index: 10000; transition: opacity 0.25s ease-in-out; opacity: 0;"></div><div aria-hidden="true" style="display: none; position: fixed; inset: 5% 10%; z-index: 10000; transition: opacity 0.25s ease-in-out; opacity: 0;"><iframe title="Form powered and secured by Zeffy" src="https://www.zeffy.com/embed/donation-form/support-isnvd?modal=true&amp;cachebust=1791980296559" allow="payment" style="width: 100%; height: 100%; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; border-radius: 4px;"></iframe></div></body></html>

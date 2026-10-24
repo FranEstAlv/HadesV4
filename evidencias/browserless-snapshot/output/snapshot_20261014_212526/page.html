@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head>
+		<title> - Secure Payment</title>
+		<meta http-equiv="Expires" content="-1">
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta http-equiv="Cache-Control" content="no-cache">
+		<meta http-equiv="Pragma" content="no-cache">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="robots" content="noindex">
+				<link href="/libs/intl-tel-input/24.6.0/build/css/intlTelInput.min.css?v=67D83610" rel="stylesheet">
+		<link href="/js/jquery.p3payform.css?v=66E1A2AF" rel="stylesheet">
+		<link href="?session=8fb8a98dac485ba1c2c3b725ddeb2d85&amp;res=styles.css" type="text/css" rel="stylesheet">
+		<script type="text/javascript" src="/libs/jquery/3.6.0/jquery.min.js?v=67D8360F"></script>
+		<script type="text/javascript" src="/libs/jquery/plugins/blockui/2.70.0/jquery.blockUI.js?v=67D8360F"></script>
+		<script type="text/javascript" src="/libs/jquery/plugins/spinner/1.0.0/js/jquery.spinner.min.js?v=67D8360F"></script>
+		<script type="text/javascript" src="/libs/jquery/plugins/payform/cs/1.4.0/jquery.payform.min.js?v=69B446F1"></script>
+		<script type="text/javascript" src="/libs/jquery/plugins/p3payform/1.0.0/jquery.p3payform.min.js?v=67D8360F"></script>
+		<script type="text/javascript" src="/libs/intl-tel-input/24.6.0/build/js/intlTelInputWithUtils.min.js?v=67D83610"></script>
+		<script type="text/javascript" src="/sdk/web/v1/js/bincheck.min.js?v=66E1A2AF"></script><script type="text/javascript" src="https://payments.createpay.com/sdk/web/v1/js/private/bincheck.php"></script>
+		<script type="text/javascript" src="/js/jquery.p3payform.js?v=66E1A2AF"></script>
+
+		<script type="text/javascript">
+			window.abort_on_close = true;
+
+			// Css is taken from sylesheet
+			$.blockUI.defaults.css = {};
+
+			function blockUI(msg) {
+
+				// True means the payment form is submitting
+				if (msg === true) {
+					msg = "Please wait while we verify your account";
+					window.abort_on_close = false;
+				}
+
+				if (msg == '') {
+					$.blockUI({message: ''});
+				} else {
+					$.blockUI({message: '<div id="please-wait-spinner"></div><div>' + msg  + '</div>', blockMsgClass: 'please-wait-message', css: {backgroundColor: null, border: null, color: null}});
+					$('#please-wait-spinner').spinner();
+				}
+
+			}
+
+			function unblockUI() {
+				$.unblockUI();
+			}
+
+			navigator.sendBeacon = navigator.sendBeacon || function (url, data) {
+				var client = new XMLHttpRequest();
+				client.open('POST', url, false); // third parameter indicates sync xhr
+				client.setRequestHeader('Content-Type', 'text/plain;charset=UTF-8');
+				client.send(data);
+			};
+
+			$(document).ready(function () {
+
+				$('#payment').on('submit', function () {
+					$('#paybttn').attr('disabled','disabled');
+					$('.cancelbttn').attr('disabled','disabled');
+					blockUI(true);
+					window.abort_on_close = false;
+					//console.log('payment form submitted');
+					return true;
+				});
+
+				if (document.body.id === 'form' || document.body.id === 'acs-frame' || document.body.id === 'acs-method-frame') {
+					$(window).on('unload', function () {
+						if (window.abort_on_close) {
+							var url = window.location.href;
+							url = url + (url.indexOf('?') === -1 ? '?' : '&') + 'process=abort&url=' + encodeURIComponent(url) + '&session=' + "8fb8a98dac485ba1c2c3b725ddeb2d85";
+							var data = '';
+							var status = navigator.sendBeacon(url, data);
+							//console.log('sendBeacon: url = ' + url + '; data = ' + data + '; status = ' + status);
+						}
+					});
+				}
+
+				// Add rel="noopener noreferrer nofollow" to target="_blank" anchors
+				// https://www.jitbit.com/alexblog/256-targetblank---the-most-underestimated-vulnerability-ever/
+				$('a[target="_blank"]').each(function () {
+					if (location.hostname !== this.hostname) {
+						var rel = (this.rel === undefined) ? '' : this.rel.toLowerCase();
+						if (rel.indexOf('noopener') === -1){
+							rel += ' noopener';
+						}
+						if (rel.indexOf('noreferrer') === -1){
+							rel += ' noreferrer';
+						}
+						if (rel.indexOf('nofollow') === -1){
+							rel += ' nofollow';
+						}
+						$(this).attr('rel', rel);
+					}
+				});
+
+			});
+
+		</script>
+			</head>
+	<body id="exception">
+		<div id="body">
+	<div id="page">
+	<div id="header">
+		<div id="secure"></div>
+		<div id="logo"><h1> <small>Secure Payment</small></h1></div>
+		<div class="clear"></div>
+	</div>
+	<div id="center">
+		<div id="content"><div class="messagebox">Sorry, we encountered an error while processing your request, and our technical staff have been notified. Please contact the seller for further assistance. [#00066048]</div></div>		<img id="hostedby" src="/hosted/themes/1.2/createpay/img/hostedby.png" alt="">
+	</div>
+	<div id="footer">
+	</div>
+</div>
+</div>
+	<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;8ba2379b9e954f13a23dd666a478ee76&quot;,&quot;spa&quot;:2}" crossorigin="anonymous"></script>
+
+
+</body></html>

@@ -1,0 +1,11 @@
+{
+  "requested_url": "https://www.insidehs.com/my-account/add-payment-method/",
+  "final_url": "https://www.insidehs.com/my-account/add-payment-method/",
+  "http_status": 404,
+  "title": "Page not found - Inside Hospitality Solutions",
+  "navigation_time": 23039,
+  "proxy_country": "mx",
+  "stealth": true,
+  "humanlike": true,
+  "bql_errors": []
+}

@@ -1,0 +1,8 @@
+curl_cffi
+beautifulsoup4
+faker
+cryptography
+requests
+Pillow
+python-dotenv
+

@@ -1,0 +1,47 @@
+# Snapshot de solo lectura: abre la URL y captura estructura + HTML + screenshot.
+# Sin login, sin clics, sin escribir nada. Compatible con snapshot_runner.py
+# (campos aliased a lo que el runner lee: navigation, title.text,
+# headings/forms/inputs/buttons/selects/links/images como listas,
+# pageHTML.html, screenshot.base64). Extras (linkHrefs) quedan en result.json.
+mutation Snapshot($url: String!) {
+  navigation: goto(url: $url, waitUntil: networkIdle) {
+    status
+    url
+    time
+  }
+  title {
+    text: title
+  }
+  headings: querySelectorAll(selector: "h1, h2, h3") {
+    innerText
+  }
+  forms: querySelectorAll(selector: "form") {
+    id
+    className
+    innerText
+  }
+  inputs: querySelectorAll(selector: "input") {
+    id
+    className
+  }
+  buttons: querySelectorAll(selector: "button, input[type=submit]") {
+    innerText
+    id
+  }
+  selects: querySelectorAll(selector: "select") {
+    id
+  }
+  links: querySelectorAll(selector: "a") {
+    innerText
+  }
+  images: querySelectorAll(selector: "img") {
+    id
+    className
+  }
+  pageHTML: html {
+    html
+  }
+  screenshot {
+    base64
+  }
+}

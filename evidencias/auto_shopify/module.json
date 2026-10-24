@@ -1,0 +1,45 @@
+{
+  "name": "auto_shopify_module",
+  "version": "1.1.0",
+  "target": "alfa1",
+  "alfa1_min_version": "R2.31.8.30",
+  "entrypoint": "samaritan_module:register",
+  "commands": [
+    "/tienda",
+    "/shop",
+    "/sh",
+    "/series",
+    "/gen",
+    "/mish"
+  ],
+  "callbacks": [],
+  "permissions": {
+    "/tienda": ["member", "seller", "admin", "superadmin"],
+    "/shop": ["member", "seller", "admin", "superadmin"],
+    "/series": ["member", "seller", "admin", "superadmin"],
+    "/sh": ["member", "seller", "admin", "superadmin"],
+    "/gen": ["admin", "superadmin"],
+    "/mish": ["member", "seller", "admin", "superadmin"]
+  },
+  "env": [
+    "SHOPIFY_PRIVATE_GROUP_ALLOWED",
+    "SHOPIFY_USER_ID_ALLOWED",
+    "SHOPIFY_SUPER_ADMIN_ID_ALLOWED",
+    "SHOPIFY_ADMIN_GROUP_ALLOWED",
+    "SHOPIFY_PRIVATE_CHAT_ALLOWED",
+    "ANALYTIC_PROXY_HOST",
+    "ANALYTIC_PROXY_PORT",
+    "ANALYTIC_PROXY_USER",
+    "ANALYTIC_PROXY_PASS",
+    "ANALYTIC_PROXY_SCHEME",
+    "BROWSERLESS_TOKEN",
+    "BROWSERLESS_ENDPOINT"
+  ],
+  "touches_core": false,
+  "touches_references": false,
+  "proxies": true,
+  "get_proxy": true,
+  "get_proxies": true,
+  "logs": true,
+  "summary": "Módulo de autocharge Shopify para detección y validación de tiendas Shopify con soporte Browserless"
+}

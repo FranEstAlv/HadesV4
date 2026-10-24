@@ -1,0 +1,11 @@
+{
+  "requested_url": "https://www.insidehs.com/my-account/",
+  "final_url": "https://www.insidehs.com/my-account/",
+  "http_status": 404,
+  "title": "Page not found - Inside Hospitality Solutions",
+  "navigation_time": 20722,
+  "proxy_country": "mx",
+  "stealth": true,
+  "humanlike": true,
+  "bql_errors": []
+}

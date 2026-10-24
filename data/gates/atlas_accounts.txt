@@ -1,0 +1,12 @@
+# Cuentas del comercio Eastern Surplus para el gate /tl y /tlmass.
+# Formato: email|password  (una cuenta por linea).
+#
+# El gate rota de cuenta por lote: si una falla el login, prueba la
+# siguiente. Si una cuenta deja de servir (restringida o dada de baja),
+# se marca sola y deja de usarse hasta revision.
+#
+# La cuenta inicial es la de prueba verificada (orden 22744 real).
+bubfyeed27@philotes.biz|Spark69
+test@test.com|TestPass123!
+axwe0xzer0@tartaro.cyou|Gato89
+dingo-bless-raven@duck.com|Ktk3YAJ#Vm59KdgPJetr

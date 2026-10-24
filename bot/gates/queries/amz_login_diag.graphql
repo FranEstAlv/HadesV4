@@ -1,0 +1,47 @@
+# Diagnóstico del paso "Continuar" del login de Amazon MX.
+# Escribe el correo, pulsa #continue y captura en qué pantalla quedó
+# (¿pide password? ¿pide OTP? ¿error? ¿cuenta suspendida?).
+# No envía contraseña: solo el primer paso del login.
+mutation AmzLoginDiag($url: String!, $login: String!) {
+  open: goto(url: $url, waitUntil: domContentLoaded) {
+    status
+    url
+    time
+  }
+  emailReady: waitForSelector(selector: "#ap_email_login", timeout: 20000) {
+    selector
+    time
+  }
+  emailTyped: type(selector: "#ap_email_login", text: $login) {
+    selector
+    time
+  }
+  continued: click(selector: "#continue") {
+    selector
+    time
+  }
+  settled: waitForTimeout(time: 5000) {
+    time
+  }
+  finalUrl: evaluate(content: "String(location.href)") {
+    value
+  }
+  pageTitle: title {
+    text: title
+  }
+  hasPassword: evaluate(content: "String(!!document.querySelector('#ap_password'))") {
+    value
+  }
+  hasOtp: evaluate(content: "String(!!(document.querySelector('#auth-mfa-otpcode')||document.querySelector('input[name=otpCode]')||document.querySelector('#auth-captcha-form')))") {
+    value
+  }
+  bodyText: evaluate(content: "String((document.body&&document.body.innerText||'').slice(0,3000))") {
+    value
+  }
+  headings: querySelectorAll(selector: "h1, h2, h3, h4") {
+    innerText
+  }
+  pageHTML: html {
+    html
+  }
+}

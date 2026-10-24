@@ -1,0 +1,11 @@
+{
+  "requested_url": "https://www.paypal.com/v2/checkout/orders",
+  "final_url": "chrome-error://chromewebdata/",
+  "http_status": null,
+  "title": "www.paypal.com",
+  "navigation_time": 1798,
+  "proxy_country": "mx",
+  "stealth": true,
+  "humanlike": true,
+  "bql_errors": []
+}
