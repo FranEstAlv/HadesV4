@@ -31,7 +31,5 @@ data/txt/
 .DS_Store
 Thumbs.db
 
-# Videos de evidencias que superan el límite de GitHub (100 MB) - no se versionan
-evidencias/Har/Screenrecorder-2026-10-23-01-17-23-375.mp4
-evidencias/Har/Copy of Screenrecorder-2026-10-23-01-17-23-375.mp4
-evidencias/Har/compra/Screenrecorder-2026-10-23-19-16-36-628.mp4
+# Carpeta de evidencias: solo local, nunca se versiona
+evidencias/
