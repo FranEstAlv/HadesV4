@@ -33,3 +33,6 @@ Thumbs.db
 
 # Carpeta de evidencias: solo local, nunca se versiona
 evidencias/
+
+# Secretos: solo local, nunca se versiona
+proxys.md
