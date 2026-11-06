@@ -1,4 +1,4 @@
-"""Handlers de los gates /di, /ph, /eu, /wo y sus variantes masivas."""
+"""Handlers de los gates /di, /ph, /eu, /wo, /amz, /amss y sus variantes masivas."""
 from __future__ import annotations
 
 import asyncio
@@ -16,19 +16,20 @@ from aiogram.fsm.context import FSMContext
 
 from bot.gates.checker import gate_check, gate_check_multiple
 from bot.gates.amazon import (
-    amazon_check,
-    amazon_check_multiple,
     amazon_check_cookie,
     amazon_refresh_cookie,
     validate_amazon_cookie,
 )
+from bot.utils.cleanup import schedule_delete
+from bot.gates.amazon_classic import amazon_classic_check, amazon_classic_check_multiple
 from bot.handlers.hiperion import register_hiperion_handlers
 from bot.services.memberships import get_membership, is_membership_active
 import logging
 
 from bot.services.admins import is_admin
 from bot.services.credits import deduct_credits
-from bot.services.amazon_cookies import save_amazon_cookie, delete_amazon_cookie
+from bot.config import MASS_CREDIT_COST
+from bot.services.amazon_cookies import save_amazon_cookie, delete_amazon_cookie, get_amazon_cookie
 from bot.services.card_generator import CardGenerator, validate_gen_input
 from bot.utils.bin_lookup import get_card_info
 from bot.utils.formatting import (
@@ -71,7 +72,7 @@ GATE_PLANS = {
     "wo": {"olimpo", "mensual"},
     "womass": {"olimpo", "mensual"},
     "amz": {"olimpo", "mensual", "quincenal"},
-    "amzmass": {"olimpo", "mensual", "quincenal"},
+    "amss": {"olimpo", "mensual", "quincenal"},
     "gen": _ALL_PLANS,
     "extra": _ALL_PLANS,
 }
@@ -79,7 +80,7 @@ GATE_PLANS = {
 SINGLE_COOLDOWN = 7
 MASS_COOLDOWN = 20
 MASS_LIMIT = 10
-MASS_CREDIT_COST = 5
+# Costo de masivos: fuente única bot.config (5, gratis para admins y Olimpo).
 
 _GEN_CUSTOM_EMOJI_ID = "5454074580010295588"
 _GATE_CUSTOM_EMOJI_ID = "5454074580010295588"
@@ -105,9 +106,9 @@ def _gate_emoji(fallback: str) -> str:
 
 last_single_time: Dict[str, Dict[int, datetime]] = {cmd: {} for cmd in GATE_COMMANDS}
 last_mass_time: Dict[str, Dict[int, datetime]] = {cmd: {} for cmd in GATE_COMMANDS}
-# Gate Amazon MX (/amz, /amzmass): mismos cooldowns, registros propios.
+# Gate Amazon clásico (AmazonGate directo: /amz, /amss): mismos cooldowns, registros propios.
 last_single_time["amz"] = {}
-last_mass_time["amz"] = {}
+last_mass_time["amss"] = {}
 
 # Lote masivo de Amazon en curso por usuario (para poder detenerlo con
 # /amzstop y para no dejar tareas huérfanas).
@@ -268,14 +269,6 @@ def _result_markup() -> InlineKeyboardMarkup:
     )
 
 
-async def _delete_after(message: Message, delay: int = 30) -> None:
-    try:
-        await asyncio.sleep(delay)
-        await message.delete()
-    except Exception:
-        pass
-
-
 # ---------------------------------------------------------------------------
 # Comandos individuales
 # ---------------------------------------------------------------------------
@@ -329,7 +322,7 @@ async def cmd_gate_single(message: Message):
         result_msg = await message.answer(text, reply_markup=_result_markup(), parse_mode=ParseMode.HTML)
 
     if result.get("status") != "✅ Live":
-        asyncio.create_task(_delete_after(result_msg))
+        schedule_delete(result_msg)
 
     last_single_time[command][user_id] = datetime.now()
 
@@ -389,6 +382,17 @@ async def cmd_gate_mass(message: Message):
         )
         return
 
+    # Un solo lote ParkingPay a la vez por usuario: un segundo /xmass a los
+    # 20s se encimaría sobre el anterior (sigue corriendo ~100s+) y duplica
+    # la carga sobre la misma IP/proxy.
+    running = _mass_tasks.get(user_id)
+    if running is not None and not running.done():
+        await message.answer(
+            "⏳ Ya tienes un lote en curso. Espera a que termine antes de lanzar otro.",
+            parse_mode=ParseMode.HTML,
+        )
+        return
+
     lines: List[str] = []
 
     # 1. Tarjetas respondiendo a otro mensaje
@@ -430,6 +434,9 @@ async def cmd_gate_mass(message: Message):
         mass_processing_text(gate_name, 0, total), parse_mode=ParseMode.HTML
     )
 
+    # Cooldown: se registra al TERMINAR el lote, no al iniciarlo. Antes se
+    # guardaba aquí y un usuario podía lanzar otro /xmass a los 20s cuando
+    # el anterior seguía corriendo (~100s+).
     last_mass_time[base_command][user_id] = datetime.now()
 
     lock = asyncio.Lock()
@@ -447,7 +454,7 @@ async def cmd_gate_mass(message: Message):
                     escape_html(text), reply_markup=_result_markup()
                 )
             if result.get("status") != "✅ Live":
-                asyncio.create_task(_delete_after(sent))
+                schedule_delete(sent)
 
             processed_count += 1
             if processed_count < total:
@@ -468,19 +475,31 @@ async def cmd_gate_mass(message: Message):
                     await current_processing.delete()
                 except Exception:
                     pass
+                # Lote terminado: aquí empieza a contar el cooldown.
+                last_mass_time[base_command][uid] = datetime.now()
 
-    asyncio.create_task(gate_check_multiple(gate_name, lines, user_id, result_callback))
+    async def _run_batch() -> None:
+        try:
+            await gate_check_multiple(gate_name, lines, user_id, result_callback)
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            logger.exception("ParkingPay mass: error inesperado en el lote")
+
+    task = asyncio.create_task(_run_batch())
+    _mass_tasks[user_id] = task
+    task.add_done_callback(lambda _t: _mass_tasks.pop(user_id, None))
 
 
 # ---------------------------------------------------------------------------
-# Gate Amazon MX: /amz (unitario) y /amzmass (masivo)
+# Gate Amazon clásico (AmazonGate directo): /amz (unitario) y /amss (masivo)
 # ---------------------------------------------------------------------------
 AMAZON_GATE_NAME = "Amazon"
 
 
 @router.message(Command("amz"))
 async def cmd_amz_single(message: Message):
-    """Verifica una tarjeta con el gate Amazon MX."""
+    """Verifica una tarjeta con el gate Amazon clásico."""
     command = _parse_command(message)
     user_id = message.from_user.id
 
@@ -519,7 +538,24 @@ async def cmd_amz_single(message: Message):
         processing_text(f"{AMAZON_GATE_NAME} MX"), parse_mode=ParseMode.HTML
     )
 
-    result = await amazon_check(card_data, user_id)
+    # Recuperar proxy de la cookie guardada si existe
+    saved_proxy = None
+    try:
+        cookie_and_proxy = await get_amazon_cookie(user_id)
+        if cookie_and_proxy and cookie_and_proxy[1]:
+            saved_proxy = cookie_and_proxy[1]
+    except Exception:
+        pass
+
+    try:
+        result = await amazon_classic_check(card_data, user_id, proxy=saved_proxy)
+    except Exception:
+        logger.exception("Amazon clásico: error inesperado en /amz")
+        result = {
+            "status": "<tg-emoji emoji-id=\"5021618274345943603\">⚠️</tg-emoji> Error",
+            "message": "El gate falló por un error interno. Intenta de nuevo.",
+            "classification": "error",
+        }
 
     text = _format_gate_response(card_data, result, AMAZON_GATE_NAME, command)
     try:
@@ -528,14 +564,14 @@ async def cmd_amz_single(message: Message):
         result_msg = await message.answer(text, reply_markup=_result_markup(), parse_mode=ParseMode.HTML)
 
     if result.get("status") != "✅ Live":
-        asyncio.create_task(_delete_after(result_msg))
+        schedule_delete(result_msg)
 
     last_single_time["amz"][user_id] = datetime.now()
 
 
-@router.message(Command("amzmass"))
+@router.message(Command("amss"))
 async def cmd_amz_mass(message: Message):
-    """Verifica un lote de tarjetas con el gate Amazon MX (máximo 10)."""
+    """Verifica un lote de tarjetas con el gate Amazon clásico (máximo 10)."""
     command = _parse_command(message)
     user_id = message.from_user.id
 
@@ -544,7 +580,7 @@ async def cmd_amz_mass(message: Message):
         return
 
     now = datetime.now()
-    last = last_mass_time["amz"].get(user_id)
+    last = last_mass_time["amss"].get(user_id)
     if last and (now - last).total_seconds() < MASS_COOLDOWN:
         remaining = MASS_COOLDOWN - (now - last).total_seconds()
         await message.answer(
@@ -595,7 +631,7 @@ async def cmd_amz_mass(message: Message):
         parse_mode=ParseMode.HTML,
     )
 
-    last_mass_time["amz"][user_id] = datetime.now()
+    last_mass_time["amss"][user_id] = datetime.now()
 
     lock = asyncio.Lock()
     processed_count = 0
@@ -636,7 +672,7 @@ async def cmd_amz_mass(message: Message):
                     escape_html(text), reply_markup=_result_markup()
                 )
             if result.get("status") != "✅ Live":
-                asyncio.create_task(_delete_after(sent))
+                schedule_delete(sent)
 
             processed_count += 1
             if processed_count < total:
@@ -649,9 +685,9 @@ async def cmd_amz_mass(message: Message):
 
     async def _run_batch() -> None:
         try:
-            await amazon_check_multiple(lines, callback=result_callback, user_id=user_id)
+            await amazon_classic_check_multiple(lines, callback=result_callback, user_id=user_id)
         except asyncio.CancelledError:
-            logger.info("Amazon mass: lote cancelado por el usuario (user_id=%s)", user_id)
+            logger.info("Amazon clásico mass: lote cancelado por el usuario (user_id=%s)", user_id)
             try:
                 await message.answer(
                     "🛑 Lote de Amazon detenido.",
@@ -661,7 +697,7 @@ async def cmd_amz_mass(message: Message):
                 pass
             raise
         except Exception:
-            logger.exception("Amazon mass: error inesperado en el lote")
+            logger.exception("Amazon clásico mass: error inesperado en el lote")
             try:
                 await message.answer(
                     "⚠️ El lote de Amazon falló por un error interno.",
@@ -1010,7 +1046,8 @@ async def cb_cookie_export(callback: CallbackQuery, state: FSMContext):
     classification = result.get("classification", "unknown")
     if classification == "valid":
         cookies = result.get("cookie") or ""
-        await state.update_data(cookies=cookies)
+        proxy = result.get("proxy")
+        await state.update_data(cookies=cookies, proxy=proxy)
         if result.get("refreshed"):
             try:
                 await delete_amazon_cookie(user_id)
@@ -1107,7 +1144,7 @@ async def cmd_save_cookie(message: Message):
             pass
 
     processing = await message.answer("⏳ Validando la cookie en Amazon...")
-    validation = await validate_amazon_cookie(cookie)
+    validation = await validate_amazon_cookie(cookie, None)
 
     if validation.get("classification") != "valid":
         text = (
@@ -1123,7 +1160,7 @@ async def cmd_save_cookie(message: Message):
             await message.answer(text, parse_mode=ParseMode.HTML)
         return
 
-    await save_amazon_cookie(user_id, cookie)
+    await save_amazon_cookie(user_id, cookie, None)
 
     confirm = await message.answer(
         "✅ Cookie de Amazon guardada y validada.\n\n"
@@ -1135,7 +1172,7 @@ async def cmd_save_cookie(message: Message):
         "<code>/checkcookies</code> — Validar tus cookies",
         parse_mode=ParseMode.HTML,
     )
-    asyncio.create_task(_delete_after(confirm, delay=10))
+    schedule_delete(confirm, delay=10)
 
 
 def register_gate_handlers(dp):

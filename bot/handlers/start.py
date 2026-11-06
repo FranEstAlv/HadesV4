@@ -7,7 +7,7 @@ from aiogram.filters import Command
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramBadRequest
 
-from bot.keyboards import main_menu, back_button, gates_menu
+from bot.keyboards import main_menu, back_button, gates_menu, gates_category_menu, gate_detail_menu
 from bot.services.users import register_user
 from bot.services.memberships import get_membership, format_end_date, is_membership_active
 from bot.services.logger import log_new_user, log_unknown_command, log_error
@@ -22,10 +22,18 @@ _WELCOME_IMAGE = Path(__file__).parent.parent / "assets" / "welcome.png"
 # Custom emoji para el panel de Gates
 _GATE_PANEL_EMOJI_ID = "5454074580010295588"
 
+# Custom emoji para las 3 categorías (Auth / Charged / CCN Charged)
+_GATE_CATEGORY_EMOJI_ID = "4970142833605345805"
+
 
 def _gate_emoji(fallback: str) -> str:
     """Devuelve el custom emoji del panel Gates."""
     return f'<tg-emoji emoji-id="{_GATE_PANEL_EMOJI_ID}">{fallback}</tg-emoji>'
+
+
+def _cat_emoji(fallback: str) -> str:
+    """Devuelve el custom emoji de las categorías Auth / Charged / CCN Charged."""
+    return f'<tg-emoji emoji-id="{_GATE_CATEGORY_EMOJI_ID}">{fallback}</tg-emoji>'
 
 
 def welcome_text(first_name: str) -> str:
@@ -224,33 +232,225 @@ async def cb_perfil(callback: CallbackQuery):
 
 @router.callback_query(F.data == "menu_gates")
 async def cb_gates(callback: CallbackQuery):
-    """Opción GATES: lista de comandos disponibles."""
+    """Opción GATES: 3 botones por categoría (Auth / Charged / CCN Charged)."""
     g = _gate_emoji
+    c = _cat_emoji
     text = (
         "<blockquote>\n"
-        f"{g('⚡')} <b>GATES DISPONIBLES</b>\n\n"
-        f"{g('🔱')} /di — Euridice (100 MXN)\n"
-        f"{g('💎')} /ph — Philotes (1 MXN)\n"
-        f"{g('⚡')} /eu — Eurinias (20 MXN)\n"
-        f"{g('🔥')} /wo — Wojtek (50 MXN)\n"
-        f"{g('💎')} /rd — Radamanthys CCN AUTH $1 MXN\n"
-        f"{g('🏛️')} /tl — Atlas Payflow CCN $7 USD\n"
-        # /ir — Iris Stripe $6 USD (DESACTIVADO 2026-10-23: sin checkout real; no mapear)
-        f"{g('👻')} /gh — Ghost - Paypal cvv auth $5 mxn (ccs)\n"
+        f"{g('⚡')} <b>GATES DISPONIBLES</b>\n"
+        "Selecciona una categoría para ver sus gates.\n\n"
+        f"{c('🔐')} Auth — Ideal para ccs\n"
+        f"{c('💳')} Charged — Cobro con cvv\n"
+        f"{c('💎')} CCN Charged — Cobro sin revisar cvv\n\n"
+        "Masivos: cuestan 5 créditos, gratis e ilimitado para miembros Olimpo.\n"
         f"{g('🛠️')} /gen — Generador de tarjetas\n"
-        f"{g('💳')} /extra — Extrapolador de BINs\n\n"
-        "Masivos: Costo 5 créditos, gratis e ilimitado para miembros olimpo\n"
-        f"{g('🔱')} /dimass — Euridice mass\n"
-        f"{g('💎')} /phmass — Philotes mass\n"
-        f"{g('⚡')} /eumass — Eurinias mass\n"
-        f"{g('🔥')} /womass — Wojtek mass\n"
-        f"{g('💎')} /rdmass — Radamanthys CCN AUTH mass\n"
-        f"{g('🏛️')} /tlmass — Atlas Payflow CCN $7 USD mass\n"
-        # /irmass — Iris Stripe $6 USD mass (DESACTIVADO)
+        f"{g('💳')} /extra — Extrapolador de series\n"
         "</blockquote>"
     )
-    await _edit_or_send(callback, text, back_button())
+    await _edit_or_send(callback, text, gates_menu())
     await callback.answer()
+
+
+def _gates_category_text(category: str) -> str:
+    g = _gate_emoji
+    c = _cat_emoji
+    if category == "auth":
+        return (
+            "<blockquote>\n"
+            f"{c('🔐')} <b>AUTH</b>\n\n"
+            f"{g('👻')} Ghost (PayPal auth $5 MXN)\n"
+            "       /gh\n"
+            "</blockquote>"
+        )
+    if category == "charged":
+        return (
+            "<blockquote>\n"
+            f"{c('💳')} <b>CHARGED</b>\n\n"
+            f"{g('🐍')} Medusa PayFlow Pro $11.39 USD\n"
+            "       /md /mdmass\n"
+            "</blockquote>"
+        )
+    return (
+        "<blockquote>\n"
+        f"{c('💎')} <b>CCN CHARGED</b>\n\n"
+        f"{g('💎')} Philotes (1 MXN)\n"
+        "       /ph /phmass\n"
+        f"{g('⚡')} Eurinias (20 MXN)\n"
+        "       /eu /eumass\n"
+        f"{g('🔥')} Wojtek (50 MXN)\n"
+        "       /wo /womass\n"
+        f"{g('🔱')} Euridice (100 MXN)\n"
+        "       /di /dimass\n"
+        "</blockquote>"
+    )
+
+
+@router.callback_query(F.data.in_({"menu_gates_auth", "menu_gates_charged", "menu_gates_ccn"}))
+async def cb_gates_category(callback: CallbackQuery):
+    """Muestra la lista de gates dentro de la categoría elegida."""
+    category = callback.data.removeprefix("menu_gates_")
+    await _edit_or_send(
+        callback,
+        _gates_category_text(category),
+        gates_category_menu(category),
+    )
+    await callback.answer()
+
+
+# ─────────────────────────────────────────────────────────────
+# Panel de cada gate: descripción + formato de uso.
+# Namespace "menu_gate_*" (propio del menú). No confundir con el
+# handler "gate_*" que ya existe en bot/handlers/gates.py.
+# ─────────────────────────────────────────────────────────────
+
+def _gate_detail_text(key: str) -> str:
+    g = _gate_emoji
+    details = {
+        "ghost": (
+            "<blockquote>\n"
+            f"{g('👻')} <b>GHOST — Auth</b>\n"
+            "PayPal auth de $5 MXN. Verifica si la tarjeta pasa la autenticación.\n\n"
+            "Uso:\n"
+            "<code>/gh cc|mes|año|cvv</code>\n\n"
+            "Ejemplo:\n"
+            "<code>/gh 4532640527811643|12|2028|123</code>\n\n"
+            "Solo una tarjeta por vez, sin modo masivo.\n"
+            "</blockquote>"
+        ),
+        "medusa": (
+            "<blockquote>\n"
+            f"{g('🐍')} <b>MEDUSA — Charged</b>\n"
+            "PayFlow Pro CCN Charged de $11.39 USD. Hace un cargo real para confirmar la tarjeta.\n\n"
+            "Uso:\n"
+            "<code>/md cc|mes|año|cvv</code>\n\n"
+            "Ejemplo:\n"
+            "<code>/md 4347697133726676|04|2031|431</code>\n\n"
+            "Masivo (máximo 10):\n"
+            "<code>/mdmass</code> respondiendo a un mensaje con tarjetas.\n"
+            "</blockquote>"
+        ),
+        "philotes": (
+            "<blockquote>\n"
+            f"{g('💎')} <b>PHILOTES — CCN Charged</b>\n"
+            "Cargo de $1 MXN para validar la tarjeta.\n\n"
+            "Uso:\n"
+            "<code>/ph cc|mes|año|cvv</code>\n\n"
+            "Ejemplo:\n"
+            "<code>/ph 4532640527811643|12|2025|123</code>\n\n"
+            "Masivo (máximo 10):\n"
+            "<code>/phmass</code> respondiendo a un mensaje con tarjetas.\n"
+            "</blockquote>"
+        ),
+        "eurinias": (
+            "<blockquote>\n"
+            f"{g('⚡')} <b>EURINIAS — CCN Charged</b>\n"
+            "Cargo de $20 MXN para validar la tarjeta.\n\n"
+            "Uso:\n"
+            "<code>/eu cc|mes|año|cvv</code>\n\n"
+            "Ejemplo:\n"
+            "<code>/eu 4532640527811643|12|2025|123</code>\n\n"
+            "Masivo (máximo 10):\n"
+            "<code>/eumass</code> respondiendo a un mensaje con tarjetas.\n"
+            "</blockquote>"
+        ),
+        "wojtek": (
+            "<blockquote>\n"
+            f"{g('🔥')} <b>WOJTEK — CCN Charged</b>\n"
+            "Cargo de $50 MXN para validar la tarjeta.\n\n"
+            "Uso:\n"
+            "<code>/wo cc|mes|año|cvv</code>\n\n"
+            "Ejemplo:\n"
+            "<code>/wo 4532640527811643|12|2025|123</code>\n\n"
+            "Masivo (máximo 10):\n"
+            "<code>/womass</code> respondiendo a un mensaje con tarjetas.\n"
+            "</blockquote>"
+        ),
+        "euridice": (
+            "<blockquote>\n"
+            f"{g('🔱')} <b>EURIDICE — CCN Charged</b>\n"
+            "Cargo de $100 MXN para validar la tarjeta.\n\n"
+            "Uso:\n"
+            "<code>/di cc|mes|año|cvv</code>\n\n"
+            "Ejemplo:\n"
+            "<code>/di 4532640527811643|12|2025|123</code>\n\n"
+            "Masivo (máximo 10):\n"
+            "<code>/dimass</code> respondiendo a un mensaje con tarjetas.\n"
+            "</blockquote>"
+        ),
+    }
+    return details.get(key, "")
+
+
+@router.callback_query(F.data.startswith("menu_gate_"))
+async def cb_gate_detail(callback: CallbackQuery):
+    """Muestra el panel de descripción del gate seleccionado."""
+    key = callback.data.removeprefix("menu_gate_")
+    text = _gate_detail_text(key)
+    if not text:
+        await callback.answer()
+        return
+    await _edit_or_send(callback, text, gate_detail_menu())
+    await callback.answer()
+
+
+# ─────────────────────────────────────────────────────────────
+# Accesos directos: /gates y /perfil (sin pasar por /start).
+# /gen ya existe en bot/handlers/gates.py, no se duplica aquí.
+# Se registran antes de unknown_command para que no los capture.
+# ─────────────────────────────────────────────────────────────
+
+@router.message(Command("gates"))
+async def cmd_gates(message: Message):
+    """Abre directamente la sección de Gates."""
+    user = message.from_user
+    await register_user(user.id, user.username, user.full_name)
+    g = _gate_emoji
+    c = _cat_emoji
+    text = (
+        "<blockquote>\n"
+        f"{g('⚡')} <b>GATES DISPONIBLES</b>\n"
+        "Selecciona una categoría para ver sus gates.\n\n"
+        f"{c('🔐')} Auth — Ideal para ccs\n"
+        f"{c('💳')} Charged — Cobro con cvv\n"
+        f"{c('💎')} CCN Charged — Cobro sin revisar cvv\n\n"
+        "Masivos: cuestan 5 créditos, gratis e ilimitado para miembros Olimpo.\n"
+        f"{g('🛠️')} /gen — Generador de tarjetas\n"
+        f"{g('💳')} /extra — Extrapolador de series\n"
+        "</blockquote>"
+    )
+    await message.answer(text, parse_mode=ParseMode.HTML, reply_markup=gates_menu())
+
+
+@router.message(Command("perfil"))
+async def cmd_perfil(message: Message):
+    """Abre directamente el perfil del usuario."""
+    user = message.from_user
+    await register_user(user.id, user.username, user.full_name)
+    text = await _format_profile_text(user)
+    try:
+        if _WELCOME_IMAGE.exists():
+            await message.answer_photo(
+                photo=FSInputFile(_WELCOME_IMAGE),
+                caption=text,
+                parse_mode=ParseMode.HTML,
+                reply_markup=back_button(),
+            )
+        else:
+            await message.answer(text, parse_mode=ParseMode.HTML, reply_markup=back_button())
+    except TelegramBadRequest as exc:
+        if "ENTITY_TEXT_INVALID" in str(exc):
+            plain_text = strip_custom_emojis(text)
+            if _WELCOME_IMAGE.exists():
+                await message.answer_photo(
+                    photo=FSInputFile(_WELCOME_IMAGE),
+                    caption=plain_text,
+                    parse_mode=ParseMode.HTML,
+                    reply_markup=back_button(),
+                )
+            else:
+                await message.answer(plain_text, parse_mode=ParseMode.HTML, reply_markup=back_button())
+        else:
+            raise
 
 
 @router.callback_query(F.data == "menu_precios")

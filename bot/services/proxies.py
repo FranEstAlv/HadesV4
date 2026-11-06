@@ -56,6 +56,20 @@ PROTOCOL = _first_env("IPROYAL_PROTOCOL", default="http").lower()
 ROTATORY_URL = _first_env("IPROYAL_ROTATORY_URL", default="")
 STICKY_MX_URL = _first_env("IPROYAL_STICKY_MX_URL", default="")
 
+
+def _pool_env(name: str) -> List[str]:
+    """Lee una variable con URLs separadas por coma, salto de linea o espacio."""
+    raw = os.getenv(name, "") or ""
+    raw = raw.replace("\n", ",").replace(" ", ",").replace("'", "").replace('"', "")
+    return [item.strip() for item in raw.split(",") if item.strip()]
+
+
+# Pool de 200 sesiones sticky MX (evidencias/sticky-mx-10minutes.txt).
+# Se rota con random.choice en gate_proxy(pool="mx").
+STICKY_MX_POOL: List[str] = _pool_env("IPROYAL_STICKY_MX_POOL") or (
+    [STICKY_MX_URL] if STICKY_MX_URL else []
+)
+
 # El .env nuevo separa host y puerto. La variable vieja podía traer
 # "geo.iproyal.com:12321": se acepta, pero IPROYAL_PORT tiene prioridad.
 _host_raw = _first_env("IPROYAL_HOST", default="geo.iproyal.com")
@@ -149,6 +163,8 @@ def gate_proxy(pool: str = "mx") -> Optional[str]:
             return ROTATORY_URL
         choices = ROTATING_COUNTRIES or STICKY_COUNTRIES or ["mx"]
         return make_proxy(country=random.choice(choices), sticky=False)
+    if STICKY_MX_POOL:
+        return random.choice(STICKY_MX_POOL)
     if STICKY_MX_URL:
         return STICKY_MX_URL
     choices = STICKY_COUNTRIES or ["mx"]

@@ -98,7 +98,8 @@ class TempMail :
             time .sleep (min (interval ,rem ))
         if not self .wcode :
             try :self .stop ()
-            except Exception :pass
+            except Exception as _e:
+                logger .debug ('waitCode stop fallo: %s',_e )
         return self .wcode or self .poll ()
 
     def markOk (self ,address =None ):pass
@@ -120,7 +121,8 @@ class TempMail :
                     self .ev .set ()
                     return
                 interval =min (interval +1.0 ,maxInterval )
-            except Exception :pass
+            except Exception as _e:
+                logger .debug ('mail loop poll fallo: %s',_e )
             if self .stopper .wait (interval ):return
 
     def poll (self ):

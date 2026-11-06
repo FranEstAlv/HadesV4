@@ -437,7 +437,7 @@ def _err(tiempo: str) -> Dict[str, str]:
 # --------------------------------------------------------------------------
 async def atlas_check(card_data: str, user_id: Optional[int] = None) -> Dict[str, str]:
     logger.info(f"Atlas gate: inicio check user_id={user_id}")
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
 
     def _run() -> Dict[str, str]:
         inicio = datetime.now()

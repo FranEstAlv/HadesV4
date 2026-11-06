@@ -10,7 +10,9 @@ import time
 
 from bot.services.memberships import get_membership, is_membership_active
 from bot.services.admins import is_admin, is_super_admin
+from bot.config import MASS_CREDIT_COST
 from bot.services.credits import get_balance, deduct_credits
+from bot.utils.cleanup import schedule_delete
 from bot.utils.formatting import (
     dead_emoji,
     escape_html,
@@ -28,7 +30,7 @@ logger = logging.getLogger(__name__)
 # Configuración del gate
 HIPERION_SINGLE_COOLDOWN = 5
 HIPERION_MASS_COOLDOWN = 15
-HIPERION_MASS_CREDIT_COST = 0  # Gratis para todos (solo cobra en mass para no-olimpo)
+HIPERION_MASS_CREDIT_COST = MASS_CREDIT_COST  # 5, gratis para admins y Olimpo
 HIPERION_GATE_NAME = "Hiperion"
 
 _GATE_CUSTOM_EMOJI_ID = "5454074580010295588"
@@ -76,14 +78,6 @@ def _result_markup() -> InlineKeyboardMarkup:
             ]
         ]
     )
-
-
-async def _delete_after(message: Message, delay: int = 30) -> None:
-    try:
-        await asyncio.sleep(delay)
-        await message.delete()
-    except Exception:
-        pass
 
 
 async def _is_olimpo_or_admin(user_id: int) -> bool:
@@ -154,7 +148,7 @@ async def cmd_hiperion(message: Message):
             result_msg = await message.answer(response_text, reply_markup=_result_markup(), parse_mode=ParseMode.HTML)
 
         if result.get("status") != "✅ Live":
-            asyncio.create_task(_delete_after(result_msg))
+            schedule_delete(result_msg)
 
         # Actualizar tiempo de último uso
         last_hiperion_time[user_id] = time.time()
@@ -268,7 +262,7 @@ async def cmd_hiperion_mass(message: Message):
 
     # Verificar si el usuario debe pagar créditos (no es olimpo ni admin)
     should_charge_credits = not await _is_olimpo_or_admin(user_id)
-    credits_cost = 0  # Gratis para todos según especificación
+    credits_cost = HIPERION_MASS_CREDIT_COST
     
     if should_charge_credits and credits_cost > 0:
         balance = await get_balance(user_id)
@@ -315,7 +309,7 @@ async def cmd_hiperion_mass(message: Message):
                 )
 
             if result.get("status") != "✅ Live":
-                asyncio.create_task(_delete_after(sent))
+                schedule_delete(sent)
 
             processed_count += 1
             if processed_count < total:

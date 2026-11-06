@@ -1,0 +1,5 @@
+iqgbcwxystaticresidential:v2krgc0qmmv5:96.62.194.241:6443
+iqgbcwxystaticresidential:v2krgc0qmmv5:96.62.181.160:7372
+iqgbcwxystaticresidential:v2krgc0qmmv5:82.23.97.149:7875
+iqgbcwxystaticresidential:v2krgc0qmmv5:9.142.199.4:5171
+iqgbcwxystaticresidential:v2krgc0qmmv5:82.23.88.46:7802

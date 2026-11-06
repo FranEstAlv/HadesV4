@@ -8,6 +8,9 @@ Uso:
 import re
 import asyncio
 import logging
+import json
+from datetime import datetime
+from pathlib import Path
 
 from aiogram import Router, F, Bot
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
@@ -26,10 +29,98 @@ from bot.gates.amazon import amazon_check, validate_amazon_cookie
 from bot.utils.formatting import dead_emoji, processing_text
 from bot.services.admins import is_super_admin, is_admin
 from bot.services.gencookie_access import has_access
-from bot.services.galletas import galletas_left, use_galleta, daily_left, use_daily
 
 router = Router()
 logger = logging.getLogger(__name__)
+
+# =========================================================================
+# GESTIÓN DE STOCK DE CUENTAS
+# =========================================================================
+
+def load_amazon_accounts():
+    """Carga todas las cuentas guardadas en data/amazon_accounts/"""
+    accounts = []
+    base = Path("data/amazon_accounts")
+    if not base.exists():
+        return accounts
+    for f in base.glob("*.json"):
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+            accounts.append({
+                "file": f,
+                "email": data.get("email", ""),
+                "password": data.get("password", ""),
+                "country": data.get("country", ""),
+                "created": data.get("created", ""),
+                "cookies": data.get("cookies", ""),
+                "warning": data.get("warning", ""),
+                "validated": data.get("validated", False)
+            })
+        except Exception as e:
+            logger.warning(f"Error cargando {f}: {e}")
+    return accounts
+
+
+@router.message(Command("checkstock"))
+async def cmd_checkstock(message: Message):
+    """Verifica todas las cuentas en stock y muestra cuáles están vivas."""
+    user = message.from_user
+    if not await is_super_admin(user.id) and not await is_admin(user.id):
+        return  # Silencioso para no-admins
+    
+    await message.answer("🔍 Buscando cuentas en stock...", parse_mode=ParseMode.HTML)
+    
+    accounts = load_amazon_accounts()
+    if not accounts:
+        await message.answer("❌ No hay cuentas en stock.", parse_mode=ParseMode.HTML)
+        return
+    
+    live = 0
+    dead = 0
+    suspended = 0
+    expired = 0
+    
+    results = []
+    for acc in accounts:
+        proxy = None
+        validation = await validate_amazon_cookie(acc["cookies"], proxy)
+        classification = validation.get("classification", "unknown")
+        
+        if classification == "valid":
+            live += 1
+            results.append(f"✅ {acc['country']} - {acc['email']}")
+        elif classification == "suspended":
+            suspended += 1
+            results.append(f"🚫 {acc['country']} - {acc['email']} (suspendida)")
+        elif classification == "expired":
+            dead += 1
+            results.append(f"❌ {acc['country']} - {acc['email']} (expirada)")
+        else:
+            expired += 1
+            results.append(f"⚠️ {acc['country']} - {acc['email']} ({classification})")
+    
+    text_parts = [
+        "<b>📊 STOCK DE CUENTAS</b>",
+        "",
+        f"Total: {len(accounts)}",
+        f"✅ Live: {live}",
+        f"🚫 Suspendidas: {suspended}",
+        f"❌ Expiradas: {dead}",
+        f"⚠️ Desconocido: {expired}",
+        "",
+        "<b>Cuentas:</b>",
+    ]
+    for r in results[:50]:
+        text_parts.append(r)
+    
+    if len(results) > 50:
+        text_parts.append(f"... y {len(results) - 50} más")
+    
+    text = "\n".join(text_parts)
+    await message.answer(text, parse_mode=ParseMode.HTML)
+
+
+from bot.services.galletas import galletas_left, use_galleta, daily_left, use_daily
 
 try:
     from bot.config import ACCOUNT_PROXY_COUNTRIES as _POOL_COUNTRIES

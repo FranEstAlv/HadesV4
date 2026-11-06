@@ -81,6 +81,20 @@ def init_db() -> None:
         c.execute("CREATE INDEX IF NOT EXISTS idx_date ON messages(received_at)")
         c.execute(
             """
+            CREATE TABLE IF NOT EXISTS attachments (
+                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                message_id   INTEGER NOT NULL,
+                filename     TEXT NOT NULL DEFAULT '',
+                content_type TEXT NOT NULL DEFAULT '',
+                data         BLOB NOT NULL
+            )
+            """
+        )
+        c.execute(
+            "CREATE INDEX IF NOT EXISTS idx_att_msg ON attachments(message_id)"
+        )
+        c.execute(
+            """
             CREATE TABLE IF NOT EXISTS accounts (
                 token       TEXT PRIMARY KEY,
                 email       TEXT NOT NULL,
@@ -92,14 +106,29 @@ def init_db() -> None:
         c.commit()
 
 
-def db_insert(recipient: str, sender: str, subject: str, body: str) -> None:
+def db_insert(
+    recipient: str,
+    sender: str,
+    subject: str,
+    body: str,
+    attachments=(),
+) -> int:
+    """Inserta un mensaje y sus adjuntos. Devuelve el id del mensaje."""
     with _db_lock, _conn() as c:
-        c.execute(
+        cur = c.execute(
             "INSERT INTO messages (recipient, sender, subject, body, received_at) "
             "VALUES (?, ?, ?, ?, ?)",
             (recipient.lower(), sender, subject, body, datetime.now().isoformat()),
         )
+        message_id = cur.lastrowid
+        for filename, content_type, data in attachments:
+            c.execute(
+                "INSERT INTO attachments (message_id, filename, content_type, data) "
+                "VALUES (?, ?, ?, ?)",
+                (message_id, filename, content_type, data),
+            )
         c.commit()
+        return message_id
 
 
 def db_messages(email: str) -> list:
@@ -117,7 +146,25 @@ def db_messages(email: str) -> list:
 def db_cleanup() -> None:
     cutoff = (datetime.now() - timedelta(minutes=EXPIRY_MINUTES)).isoformat()
     with _db_lock, _conn() as c:
-        n = c.execute("DELETE FROM messages WHERE received_at <= ?", (cutoff,)).rowcount
+        ids = [
+            r[0]
+            for r in c.execute(
+                "SELECT id FROM messages WHERE received_at <= ?", (cutoff,)
+            ).fetchall()
+        ]
+        n = 0
+        if ids:
+            marks = ",".join("?" * len(ids))
+            c.execute(
+                f"DELETE FROM attachments WHERE message_id IN ({marks})", ids
+            )
+            n = c.execute(
+                "DELETE FROM messages WHERE received_at <= ?", (cutoff,)
+            ).rowcount
+        # Huérfanos de corridas anteriores, por si acaso.
+        c.execute(
+            "DELETE FROM attachments WHERE message_id NOT IN (SELECT id FROM messages)"
+        )
         c.commit()
     if n:
         print(f"[Cleanup] {n} mensajes expirados eliminados.")
@@ -179,6 +226,47 @@ def _cleanup_loop() -> None:
     timer.start()
 
 
+def _extract_attachments(msg) -> list:
+    """Extrae los adjuntos de un mensaje MIME como (filename, ctype, bytes).
+
+    Incluye imágenes embebidas (inline); el bot decide cómo mostrarlas.
+    """
+    atts = []
+    seen_files = {}
+    for part in msg.iter_attachments():
+        filename = (part.get_filename() or "").strip()
+        ctype = part.get_content_type() or "application/octet-stream"
+        data = None
+        try:
+            data = part.get_payload(decode=True)
+        except Exception:
+            data = None
+        if data is None:
+            try:
+                raw = part.get_payload()
+                if isinstance(raw, str):
+                    data = raw.encode("utf-8", "replace")
+            except Exception:
+                data = None
+        if not data:
+            continue
+        if not filename:
+            ext = ctype.split("/")[-1] or "bin"
+            filename = f"archivo.{ext}"
+        # Nombres repetidos dentro del mismo correo: desambiguados.
+        if filename in seen_files:
+            seen_files[filename] += 1
+            stem, dot, ext = filename.rpartition(".")
+            if dot and stem:
+                filename = f"{stem}_{seen_files[filename]}{dot}{ext}"
+            else:
+                filename = f"{filename}_{seen_files[filename]}"
+        else:
+            seen_files[filename] = 1
+        atts.append((filename, ctype, data))
+    return atts
+
+
 class SMTPHandler:
     async def handle_DATA(self, server, session, envelope):
         msg = message_from_bytes(envelope.content, policy=email_policy)
@@ -200,6 +288,7 @@ class SMTPHandler:
                 pass
 
         body = body.strip()
+        attachments = _extract_attachments(msg)
 
         # Validar que todos los destinatarios tengan un dominio permitido
         domains = NAMESPACES.get("odisea", [])
@@ -210,8 +299,12 @@ class SMTPHandler:
                 return "554 5.7.1 Recipient address rejected: invalid domain"
         
         for recipient in envelope.rcpt_tos:
-            db_insert(recipient, sender, subject, body)
-            print(f"[SMTP] {datetime.now():%H:%M:%S} {sender} -> {recipient} | {subject!r}")
+            db_insert(recipient, sender, subject, body, attachments)
+            extra = f" +{len(attachments)} adjuntos" if attachments else ""
+            print(
+                f"[SMTP] {datetime.now():%H:%M:%S} {sender} -> {recipient} | "
+                f"{subject!r}{extra}"
+            )
 
         return "250 Message accepted for delivery"
 

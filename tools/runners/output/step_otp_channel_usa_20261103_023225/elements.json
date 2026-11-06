@@ -1,0 +1,160 @@
+{
+  "headings": [
+    {
+      "innerText": "Sign in or create account"
+    }
+  ],
+  "forms": [
+    {
+      "id": "ap_login_form",
+      "className": "",
+      "innerText": "Continue"
+    },
+    {
+      "id": "",
+      "className": "",
+      "innerText": ""
+    }
+  ],
+  "inputs": [
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "",
+      "className": ""
+    },
+    {
+      "id": "ap_email_login",
+      "className": "a-input-text"
+    },
+    {
+      "id": "auth-credential-autofill-hint",
+      "className": "a-input-text aok-hidden"
+    },
+    {
+      "id": "",
+      "className": "a-button-input"
+    },
+    {
+      "id": "",
+      "className": ""
+    }
+  ],
+  "buttons": [
+    {
+      "innerText": "",
+      "id": "claim-input-clear-button"
+    },
+    {
+      "innerText": "",
+      "id": ""
+    }
+  ],
+  "selects": [
+    {
+      "id": "claim-input-dropdown-select-element"
+    }
+  ],
+  "links": [
+    {
+      "innerText": ""
+    },
+    {
+      "innerText": "Conditions of Use"
+    },
+    {
+      "innerText": "Privacy Notice"
+    },
+    {
+      "innerText": "Need help?"
+    },
+    {
+      "innerText": "Create a free business account"
+    },
+    {
+      "innerText": "Conditions of Use"
+    },
+    {
+      "innerText": "Privacy Notice"
+    },
+    {
+      "innerText": "Help"
+    }
+  ],
+  "images": [],
+  "data_asin": []
+}

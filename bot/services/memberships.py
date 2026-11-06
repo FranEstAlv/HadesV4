@@ -86,3 +86,28 @@ def is_membership_active(membership: Optional[dict]) -> bool:
     except Exception:
         # Si no podemos parsear la fecha, asumimos vencida para evitar acceso no intencional
         return False
+
+
+async def is_membership_active_db(user_id: int) -> bool:
+    """Verificación de vencimiento en SQL (Fase 5).
+
+    Evita traer la fila a Python para comparar fechas: la BD decide
+    con `datetime('now')`, atómico y sin zona horaria ambigua.
+    """
+    async with get_connection() as db:
+        async with db.execute(
+            "SELECT 1 FROM memberships WHERE user_id = ? "
+            "AND datetime(end_date) > datetime('now')",
+            (user_id,),
+        ) as cursor:
+            return await cursor.fetchone() is not None
+
+
+async def purge_expired_memberships() -> int:
+    """Elimina membresías vencidas. Retorna cuántas se purgaron."""
+    async with get_connection() as db:
+        cursor = await db.execute(
+            "DELETE FROM memberships WHERE datetime(end_date) <= datetime('now')"
+        )
+        await db.commit()
+        return cursor.rowcount if cursor.rowcount else 0

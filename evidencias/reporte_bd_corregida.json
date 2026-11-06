@@ -1,0 +1,21 @@
+{
+  "filas_crudos": 38447,
+  "filas_exactas_dup": 332,
+  "personas_unicas": 24617,
+  "filas_multiplaza": 13497,
+  "rfc_fecha_vs_curp_fecha_mismatch": 6,
+  "validacion_nombres": {
+    "ok": 23807,
+    "revisar": 810
+  },
+  "flags_parseo": {
+    "ok": 23159,
+    "ok_homonimia": 649,
+    "revisar": 810
+  },
+  "curp_sexo_invalido": 0,
+  "curp_estado_desconocido": 1,
+  "curp_fecha_invalida": 1,
+  "descartadas_fecha_invalida": 1,
+  "archivo": "personal_federalizado_corregido.csv"
+}

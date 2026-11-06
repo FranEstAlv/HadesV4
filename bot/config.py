@@ -14,14 +14,29 @@ DATA_DIR.mkdir(exist_ok=True)
 # Configuración del bot
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 
+def require_env(name: str, default: str = "") -> str:
+    """Lee una variable de entorno obligatoria.
+
+    Si falta y no hay default, lanza RuntimeError al arrancar para
+    fallar rápido en vez de fallar tarde en runtime (Fase 1).
+    """
+    val = os.getenv(name, default)
+    if not val:
+        raise RuntimeError(f"Falta variable de entorno obligatoria: {name}")
+    return val
+
+
 # Super administradores: acceso ilimitado, pueden asignar/retirar admins.
-# Estos IDs se configuran directamente en código/env y NUNCA se muestran en paneles.
+# Estos IDs se configuran en código/env y NUNCA se muestran en paneles.
 SUPER_ADMIN_IDS: Set[int] = set()
-raw_super_admin_ids = os.getenv("SUPER_ADMIN_IDS", "")
+# Compatibilidad: .env histórico usa SUPER_ADMINS; el nombre canónico es
+# SUPER_ADMIN_IDS. Se aceptan ambas, con prioridad a la canónica.
+raw_super_admin_ids = os.getenv("SUPER_ADMIN_IDS", "") or os.getenv("SUPER_ADMINS", "")
 if raw_super_admin_ids:
     SUPER_ADMIN_IDS = {int(x.strip()) for x in raw_super_admin_ids.split(",") if x.strip().isdigit()}
 
 # Por defecto si no se configura en .env
+# Fernando (Mx): 6060544328 · Segundo super admin: 5531198491.
 if not SUPER_ADMIN_IDS:
     SUPER_ADMIN_IDS = {6060544328, 5531198491}
 
@@ -73,6 +88,42 @@ C_BANDWIDTH = os.getenv("C_BANDWIDTH", "ha9faaffd31b4d5ede2a2e19d2d7fd525f66fee6
 COOKIE_COST = int(os.getenv("COOKIE_COST", "10"))
 VERIFICATION_COST = int(os.getenv("VERIFICATION_COST", "5"))
 VIP_COST = int(os.getenv("VIP_COST", "1000"))
+
+# Costos de créditos del bot (fuente única — no hardcodear en handlers).
+# Masivos (/dimass, /phmass, /eumass, /womass, /amzmass, /mdmass, /rdmass,
+# /irmass, /himass, /tlmass): 5 créditos, gratis para admins y Olimpo.
+MASS_CREDIT_COST = int(os.getenv("MASS_CREDIT_COST", "5"))
+# Registro /rfc: 15 créditos, cobra a todo no-admin (incluido Olimpo).
+RFC_CREDIT_COST = int(os.getenv("RFC_CREDIT_COST", "15"))
+
+# Costo por uso de los gates Telcel (2026-11-03, ajuste 2026-11-05).
+# Megas es gratis; factura y recarga cuestan 10 créditos. Saldo sigue
+# definido pero oculto del panel hasta que funcione. Cada gate tiene su
+# propia constante, ajustable vía variable de entorno sin tocar el código.
+TELCEL_SALDO_COST = int(os.getenv("TELCEL_SALDO_COST", "5"))
+TELCEL_MEGAS_COST = int(os.getenv("TELCEL_MEGAS_COST", "0"))
+TELCEL_FACTURA_COST = int(os.getenv("TELCEL_FACTURA_COST", "10"))
+TELCEL_RECARGA_COST = int(os.getenv("TELCEL_RECARGA_COST", "10"))
+# Cooldown entre usos de cualquier comando Telcel (por usuario, segundos).
+TELCEL_COOLDOWN_S = int(os.getenv("TELCEL_COOLDOWN_S", "60"))
+# Proxy opcional para los gates Telcel (vacío = conexión directa).
+TELCEL_PROXY = os.getenv("TELCEL_PROXY", "")
+# Secrets de los gates Telcel (Fase 1: antes hardcodeados en gates.py).
+# Si faltan, el bot arranca igual pero los gates Telcel fallan con mensaje
+# claro al usuario; el import NO debe tumbar todo el bot.
+TELCEL_DECRYPT_PASSWORD = os.getenv("TELCEL_DECRYPT_PASSWORD", "")
+TELCEL_ENCRYPT_PASSWORD = os.getenv("TELCEL_ENCRYPT_PASSWORD", "")
+TELCEL_T1_BEARER = os.getenv("TELCEL_T1_BEARER", "")
+TELCEL_MITELCEL_BEARER = os.getenv(
+    "TELCEL_MITELCEL_BEARER", "479987c7-c264-375f-91d6-55346af3a529"
+)
+
+# Costo de generación de imágenes por IA (2026-11-05).
+IMAGE_GENERATION_COST = int(os.getenv("IMAGE_GENERATION_COST", "10"))
+
+# API Key para generación de imágenes por IA (OpenRouter)
+# Si falta, el módulo de IA fallará pero el bot seguirá funcionando.
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 
 # Configuración general
 DEFAULT_COUNTRY = os.getenv("DEFAULT_COUNTRY", "US")
@@ -159,10 +210,19 @@ AMAZON_BROWSER_FALLBACK: bool = os.getenv("AMAZON_BROWSER_FALLBACK", "1") not in
 
 
 def is_super_admin(user_id: int) -> bool:
-    """True si el usuario es super admin (acceso ilimitado)."""
+    """True si el usuario es super admin (acceso ilimitado).
+
+    Compatibilidad: la lógica real vive en bot.services.admins
+    (tabla SQLite + SUPER_ADMIN_IDS). Esta copia solo existe para
+    código que la importe directo sin acceso a la BD.
+    """
     return user_id in SUPER_ADMIN_IDS
 
 
 def is_admin(user_id: int) -> bool:
-    """True si el usuario es admin o super admin. En paneles no se distingue."""
+    """True si el usuario es admin o super admin. En paneles no se distingue.
+
+    Compatibilidad (.env ADMIN_IDS): los handlers usan
+    bot.services.admins.is_admin (tabla SQLite). No mezclar.
+    """
     return user_id in SUPER_ADMIN_IDS or user_id in ADMIN_IDS

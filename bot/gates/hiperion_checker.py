@@ -80,8 +80,8 @@ def procesar_y_validar(card: str) -> Optional[Tuple[str, str, str, str]]:
 async def hiperion_check(card_data: str, user_id: Optional[int] = None) -> Dict[str, str]:
     """Verifica una sola tarjeta contra Hiperion Payflow."""
     logger.info(f"Hiperion gate: inicio check user_id={user_id}")
-    
-    loop = asyncio.get_event_loop()
+
+    loop = asyncio.get_running_loop()
     
     def _run() -> Dict[str, str]:
         try:

@@ -572,7 +572,7 @@ async def nmi_gate_check(card_data: str, user_id: int | None = None) -> Dict[str
         return {"status": "❌ Dead", "message": "Fechas Invalidas"}
 
     async with _nmi_global_sem:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         try:
             return await loop.run_in_executor(None, _process_sync, card_data, uid)
         except Exception as e:

@@ -4,6 +4,7 @@ Comandos:
     /rd      <cc>|<mes>|<año>|<cvv>   -> verifica 1 tarjeta
     /rdmass  (responde a un mensaje)  -> verifica un lote (max 10)
 
+from bot.utils.cleanup import schedule_delete
 El veredicto real lo da el gate radamanthysV2 (Krispy Kreme MX): signup con
 correo, token de Stripe y Payment/Card/Add. El token de Stripe solo pasa el
 filtro de formato. Ver bloque KrispyKreme de la skill atenea-gateway.
@@ -29,6 +30,7 @@ from bot.gates.checker import _pick_proxy
 from bot.services.memberships import get_membership, is_membership_active
 from bot.services.admins import is_admin
 from bot.services.credits import deduct_credits
+from bot.config import MASS_CREDIT_COST
 from bot.utils.bin_lookup import get_card_info
 from bot.utils.formatting import (
     dead_emoji,
@@ -46,7 +48,7 @@ RADAMANTIS_PLANS = {"olimpo", "mensual"}
 RADAMANTIS_SINGLE_COOLDOWN = 20
 RADAMANTIS_MASS_COOLDOWN = 30
 RADAMANTIS_MASS_LIMIT = 10
-RADAMANTIS_MASS_CREDIT_COST = 5
+RADAMANTIS_MASS_CREDIT_COST = MASS_CREDIT_COST  # 5, gratis para admins y Olimpo
 
 _GATE_CUSTOM_EMOJI_ID = "5454074580010295588"
 _LIVE_CUSTOM_EMOJI_ID = "5021905410089550576"
@@ -183,14 +185,6 @@ def _result_markup() -> InlineKeyboardMarkup:
             ]
         ]
     )
-
-
-async def _delete_after(message: Message, delay: int = 30) -> None:
-    try:
-        await asyncio.sleep(delay)
-        await message.delete()
-    except Exception:
-        pass
 
 
 def _extract_cards_from_text(text: Optional[str]) -> List[str]:
@@ -331,7 +325,7 @@ async def cmd_rd_single(message: Message):
         )
 
     if result.get("status") != "✅ Live":
-        asyncio.create_task(_delete_after(result_msg))
+        schedule_delete(result_msg)
 
 
 @router.message(Command("rdmass"))
@@ -446,7 +440,7 @@ async def cmd_rd_mass(message: Message):
                     escape_html(text), reply_markup=_result_markup()
                 )
             if result.get("status") != "✅ Live":
-                asyncio.create_task(_delete_after(sent))
+                schedule_delete(sent)
 
             processed_count += 1
             if processed_count < total:

@@ -603,6 +603,11 @@ def _flujo_iris(cc: str, mes: str, ano: str, cvv: str, proxy: dict) -> Dict[str,
         return {"status": status, "message": msg, "elapsed": elapsed}
     except Exception as exc:
         return _gate_error(f"Error: {exc}")
+    finally:
+        try:
+            session.close()
+        except Exception:
+            pass
 
 
 async def iris_gate_check(

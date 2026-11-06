@@ -116,14 +116,19 @@ pytz==2024.1
 # Date Range Handling
 python-dateutil==2.9.0
 
-curl_cffi==0.6.0
+# Fase 10 auditoría (2026-11-05): el bloque inferior duplicaba paquetes de
+# arriba con versiones distintas. Versión instalada en el venv (verificada):
+# aiogram 3.31.0 (no 3.4.1), curl_cffi 0.16.3 (no 0.6.0), wasmtime 50.0.1.
+# Se conservan las líneas originales como referencia; el venv manda.
+# TODO deploy limpio: regenerar con `pip freeze` y fijar una sola versión.
+curl_cffi==0.6.0  # instalado: 0.16.3
 beautifulsoup4==4.12.3
-faker==23.2.1
-cryptography==42.0.5
-requests==2.31.0
-Pillow==10.2.0
-python-dotenv==1.0.1
-
-aiosqlite>=0.20.0
+faker==23.2.1  # duplicado de línea 22
+cryptography==42.0.5  # duplicado de línea 14
+requests==2.31.0  # instalado: 2.34.2
+Pillow==10.2.0  # duplicado de línea 24
+python-dotenv==1.0.1  # instalado: 1.2.4
+wasmtime>=21.0.0  # instalado: 50.0.1
+aiosqlite>=0.20.0  # instalado: 0.22.1
 
 

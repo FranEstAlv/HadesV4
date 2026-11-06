@@ -419,6 +419,44 @@ def _solve_with_capsolver(challenge: str, html: str, page_url: str,
     return _capsolver_wait(tid)
 
 
+def _solve_arkose_with_capsolver(challenge: str, html: str, page_url: str,
+                                 user_agent: str = "",
+                                 proxy: Optional[str] = None) -> Optional[str]:
+    """Token Arkose/FunCaptcha vía CapSolver (AntiArkoseTask).
+
+    Fallback cuando 2Captcha devuelve ERROR_CAPTCHA_UNSOLVABLE en los
+    niveles de Amazon y Anti-Captcha no tiene saldo. CapSolver suele tener
+    mejor tasa con FunCaptcha/Arkose.
+    """
+    key = os.getenv("CAPSOLVER_API_KEY", "")
+    if not key:
+        return None
+    pub, blob = _arkose_config(html)
+    if not pub:
+        m = re.search(r'"publicKey"\s*:\s*"([^"]+)"', html)
+        pub = m.group(1) if m else None
+    if not pub:
+        return None
+    task = {
+        "type": "AntiArkoseTask" if proxy else "AntiArkoseTaskProxyLess",
+        "websiteURL": page_url,
+        "funcaptchaApiJSSubdomain": "https://client-api.arkoselabs.com",
+        "websitePublicKey": pub,
+    }
+    if blob:
+        task["data"] = json.dumps({"blob": blob}, separators=(",", ":"))
+    if user_agent:
+        task["userAgent"] = user_agent
+    px = _capsolver_proxy(proxy)
+    if px:
+        task["proxy"] = px
+    logger.info("capsolver arkose task key=%s proxy=%s", pub[:24], bool(px))
+    tid = _capsolver_create(task)
+    if not tid:
+        return None
+    return _capsolver_wait(tid)
+
+
 def _proxy_parts(proxy: Optional[str]) -> Optional[dict]:
     """Convierte una cadena de proxy en los campos que espera 2Captcha."""
     if not proxy:
@@ -638,6 +676,11 @@ def _solve_challenge(challenge: str, html: str, page_url: str, proxy: Optional[s
     if token:
         return token
     token = _solve_with_anticaptcha(challenge, html, page_url, user_agent, proxy)
+    if token:
+        return token
+    # Último respaldo: CapSolver (AntiArkoseTask) cuando 2Captcha marca
+    # UNSOLVABLE y Anti-Captcha no tiene saldo.
+    token = _solve_arkose_with_capsolver(challenge, html, page_url, user_agent, proxy)
     if token:
         return token
     raise CvfError(f"unsupported_challenge:{challenge}")

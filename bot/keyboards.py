@@ -16,6 +16,7 @@ BUTTONS = {
     "gates": ("Gates", "menu_gates", "primary"),
     "precios": ("Precios", "menu_precios", "primary"),
     "contacto": ("Contacto", "menu_contacto", "primary"),
+    "herramientas": ("Herramientas", "menu_tools", "primary"),
 
     # Navegación
     "close": ("Cerrar menú", "menu_close", "danger"),
@@ -48,6 +49,7 @@ def main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
         _build_button("precios", icon_emoji=MENU_ICON_EMOJI),
         _build_button("contacto", icon_emoji=MENU_ICON_EMOJI),
     )
+    builder.row(_build_button("herramientas", icon_emoji=MENU_ICON_EMOJI)),
 
     # Botón cerrar al final, ancho completo, rojo
     builder.row(_build_button("close"))
@@ -69,9 +71,73 @@ def prices_menu() -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 
+# ─────────────────────────────────────────────────────────────
+# Gates por categoría: Auth / Charged / CCN Charged
+# Namespace propio "menu_gate_*" para no empalmar con el handler
+# "gate_*" que ya existe en bot/handlers/gates.py.
+# ─────────────────────────────────────────────────────────────
+
+GATE_BUTTONS = {
+    "ghost": ("👻 Ghost", "menu_gate_ghost", "primary"),
+    "medusa": ("🐍 Medusa", "menu_gate_medusa", "primary"),
+    "philotes": ("💎 Philotes", "menu_gate_philotes", "primary"),
+    "eurinias": ("⚡ Eurinias", "menu_gate_eurinias", "primary"),
+    "wojtek": ("🔥 Wojtek", "menu_gate_wojtek", "primary"),
+    "euridice": ("🔱 Euridice", "menu_gate_euridice", "primary"),
+    "back_gates": ("⬅️ Volver a Gates", "menu_gates", "primary"),
+}
+
+GATE_CATEGORIES = {
+    "auth": ("Auth", "menu_gates_auth", "primary"),
+    "charged": ("Charged", "menu_gates_charged", "primary"),
+    "ccn": ("CCN Charged", "menu_gates_ccn", "primary"),
+}
+
+# Custom emoji para los 3 botones de categoría (Auth / Charged / CCN Charged)
+GATE_CATEGORY_ICON_EMOJI = "4970142833605345805"
+
+
+def _build_gate_button(key: str) -> InlineKeyboardButton:
+    text, callback, style = GATE_BUTTONS[key]
+    return InlineKeyboardButton(text=text, callback_data=callback, style=style)
+
+
+def _build_gate_category(key: str) -> InlineKeyboardButton:
+    text, callback, style = GATE_CATEGORIES[key]
+    return InlineKeyboardButton(
+        text=text,
+        callback_data=callback,
+        style=style,
+        icon_custom_emoji_id=GATE_CATEGORY_ICON_EMOJI,
+    )
+
+
 def gates_menu() -> InlineKeyboardMarkup:
-    """Menú de gates: solo navegación."""
-    return back_button()
+    """Menú de gates: 3 botones por categoría (Auth / Charged / CCN Charged)."""
+    builder = InlineKeyboardBuilder()
+    builder.row(_build_gate_category("auth"))
+    builder.row(_build_gate_category("charged"))
+    builder.row(_build_gate_category("ccn"))
+    # Navegación
+    builder.row(_build_button("back"), _build_button("close"))
+    return builder.as_markup()
+
+
+def gates_category_menu(category: str) -> InlineKeyboardMarkup:
+    """Lista de gates dentro de cada categoría (solo texto + navegación)."""
+    builder = InlineKeyboardBuilder()
+    # Solo navegación: volver a las 3 categorías + cerrar
+    builder.row(_build_gate_button("back_gates"))
+    builder.row(_build_button("close"))
+    return builder.as_markup()
+
+
+def gate_detail_menu() -> InlineKeyboardMarkup:
+    """Menú dentro del panel de cada gate: volver a Gates y cerrar."""
+    builder = InlineKeyboardBuilder()
+    builder.row(_build_gate_button("back_gates"))
+    builder.row(_build_button("close"))
+    return builder.as_markup()
 
 
 def confirm_cancel_menu(confirm_callback: str = "menu_confirm", cancel_callback: str = "menu_cancel") -> InlineKeyboardMarkup:
@@ -81,6 +147,47 @@ def confirm_cancel_menu(confirm_callback: str = "menu_confirm", cancel_callback:
         InlineKeyboardButton(text="✅ Confirmar", callback_data=confirm_callback, style="success"),
         InlineKeyboardButton(text="❌ Cancelar", callback_data=cancel_callback, style="danger"),
     )
+    return builder.as_markup()
+
+
+# ─────────────────────────────────────────────────────────────
+# Herramientas: Gen / Extra / BIN
+# Namespace propio "menu_tool_*" para no empalmar con otros paneles.
+# ─────────────────────────────────────────────────────────────
+
+TOOL_BUTTONS = {
+    "gen": ("🛠️ Generador (/gen)", "menu_tool_gen", "primary"),
+    "extra": ("💳 Extrapolador (/extra)", "menu_tool_extra", "primary"),
+    "bin": ("🔍 Consultar BIN (/bin)", "menu_tool_bin", "primary"),
+    "rfc": ("🪪 Registro RFC (/rfc)", "menu_tool_rfc", "primary"),
+    "telcel": ("📱 Telcel (/telcel)", "menu_telcel", "primary"),
+    "back_tools": ("⬅️ Volver a Herramientas", "menu_tools", "primary"),
+}
+
+
+def _build_tool_button(key: str) -> InlineKeyboardButton:
+    text, callback, style = TOOL_BUTTONS[key]
+    return InlineKeyboardButton(text=text, callback_data=callback, style=style)
+
+
+def tools_menu() -> InlineKeyboardMarkup:
+    """Menú de Herramientas: Generador, Extrapolador, consulta BIN, RFC y Telcel."""
+    builder = InlineKeyboardBuilder()
+    builder.row(_build_tool_button("gen"))
+    builder.row(_build_tool_button("extra"))
+    builder.row(_build_tool_button("bin"))
+    builder.row(_build_tool_button("rfc"))
+    builder.row(_build_tool_button("telcel"))
+    # Navegación
+    builder.row(_build_button("back"), _build_button("close"))
+    return builder.as_markup()
+
+
+def tool_detail_menu() -> InlineKeyboardMarkup:
+    """Menú dentro del detalle de cada herramienta: volver y cerrar."""
+    builder = InlineKeyboardBuilder()
+    builder.row(_build_tool_button("back_tools"))
+    builder.row(_build_button("close"))
     return builder.as_markup()
 
 
@@ -98,6 +205,7 @@ ADMIN_BUTTONS = {
     "matanga": ("💀 Matanga", "admin_matanga", "danger"),
     "ajuste": ("🧰 Ajuste galletas", "admin_ajuste", "primary"),
     "credits": ("💳 Créditos", "admin_credits", "primary"),
+    "sms": ("📱 SMS virtual", "admin_sms", "primary"),
     "messages": ("📨 Mensajes", "admin_messages", "primary"),
     "maintenance": ("🛠️ Mantenimiento", "admin_maintenance", "primary"),
     "close_admin": ("❌ Cerrar panel", "admin_close", "danger"),
@@ -120,6 +228,8 @@ MESSAGE_BUTTONS = {
     "msg_back": ("⬅️ Volver", "admin_back", "primary"),
     "msg_cancel": ("❌ Cancelar", "msg_cancel", "danger"),
     "msg_confirm": ("✅ Confirmar envío", "msg_confirm", "success"),
+    "msg_done": ("✅ Listo — vista previa", "msg_done", "success"),
+    "msg_reset": ("🗑 Empezar de nuevo", "msg_reset", "danger"),
 }
 
 GALLETAS_BUTTONS = {
@@ -186,7 +296,7 @@ def admin_main_menu(is_super: bool = False) -> InlineKeyboardMarkup:
         builder.row(_build_admin_button("matanga"))
         builder.row(_build_admin_button("ajuste"))
     builder.row(_build_admin_button("users"), _build_admin_button("memberships"))
-    builder.row(_build_admin_button("galletas"))
+    builder.row(_build_admin_button("galletas"), _build_admin_button("sms"))
     builder.row(_build_admin_button("credits"), _build_admin_button("messages"))
     builder.row(_build_admin_button("maintenance"))
     builder.row(_build_admin_button("close_admin"))
@@ -237,6 +347,14 @@ def message_confirm_menu() -> InlineKeyboardMarkup:
     """Menú de confirmación de envío de mensaje."""
     builder = InlineKeyboardBuilder()
     builder.row(_build_message_button("msg_confirm"), _build_message_button("msg_cancel"))
+    return builder.as_markup()
+
+
+def message_pack_menu() -> InlineKeyboardMarkup:
+    """Menú mientras se coleccionan los elementos del paquete de difusión."""
+    builder = InlineKeyboardBuilder()
+    builder.row(_build_message_button("msg_done"))
+    builder.row(_build_message_button("msg_reset"), _build_message_button("msg_cancel"))
     return builder.as_markup()
 
 
@@ -361,4 +479,169 @@ def credits_subpanel_menu() -> InlineKeyboardMarkup:
     """Menú genérico para subpaneles de créditos."""
     builder = InlineKeyboardBuilder()
     builder.row(_build_credits_button("cred_back"))
+    return builder.as_markup()
+
+
+SMS_BUTTONS = {
+    "sms_stats": ("📊 Estadísticas", "smsadm_stats", "primary"),
+    "sms_orders": ("📋 Últimos pedidos", "smsadm_orders", "primary"),
+    "sms_tiers": ("📊 Tramos de precios", "smsadm_tiers", "primary"),
+    "sms_config": ("⚙️ Configuración", "smsadm_config", "primary"),
+    "sms_toggle": ("🔛 Activar/Desactivar", "smsadm_toggle", "primary"),
+    "sms_refresh_prices": ("🔄 Ver precios API", "smsadm_prices", "primary"),
+    "sms_tier_add": ("➕ Agregar tramo", "smsadm_tier_add", "success"),
+    "sms_confirm": ("✅ Confirmar", "smsadm_confirm", "success"),
+    "sms_cancel": ("❌ Cancelar", "smsadm_cancel", "danger"),
+}
+
+
+def _build_sms_button(key: str) -> InlineKeyboardButton:
+    text, callback, style = SMS_BUTTONS[key]
+    return InlineKeyboardButton(text=text, callback_data=callback, style=style)
+
+
+def sms_admin_menu() -> InlineKeyboardMarkup:
+    """Panel SMS virtual en /batman (solo super admins)."""
+    builder = InlineKeyboardBuilder()
+    builder.row(_build_sms_button("sms_stats"))
+    builder.row(_build_sms_button("sms_orders"))
+    builder.row(_build_sms_button("sms_tiers"))
+    builder.row(_build_sms_button("sms_config"))
+    builder.row(_build_admin_button("back_admin"))
+    return builder.as_markup()
+
+
+def sms_admin_subpanel_menu() -> InlineKeyboardMarkup:
+    """Volver al panel SMS."""
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(
+            text="⬅️ Volver a SMS", callback_data="admin_sms", style="primary"
+        )
+    )
+    builder.row(_build_admin_button("back_admin"))
+    return builder.as_markup()
+
+
+def sms_admin_confirm_menu() -> InlineKeyboardMarkup:
+    """Confirmar/cancelar acción del panel SMS."""
+    builder = InlineKeyboardBuilder()
+    builder.row(_build_sms_button("sms_confirm"), _build_sms_button("sms_cancel"))
+    return builder.as_markup()
+
+
+# ─────────────────────────────────────────────────────────────
+# Telcel (2026-11-05: saldo oculto del panel — gate no funciona).
+# Namespace propio "menu_telcel" / "menu_telg_*" para no empalmar.
+# ─────────────────────────────────────────────────────────────
+def telcel_menu() -> InlineKeyboardMarkup:
+    """Panel Telcel: megas (gratis), factura y recarga (10 créditos) + cerrar."""
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(text="📶 Megas (/megas) — Gratis", callback_data="menu_telg_megas", style="primary"),
+    )
+    builder.row(
+        InlineKeyboardButton(text="🧾 Factura (/factura) — 10 créditos", callback_data="menu_telg_factura", style="primary"),
+    )
+    builder.row(
+        InlineKeyboardButton(text="⚡ Recarga (/recarga) — 10 créditos", callback_data="menu_telg_recarga", style="primary"),
+    )
+    builder.row(_build_button("close"))
+    return builder.as_markup()
+
+
+def telcel_gate_menu() -> InlineKeyboardMarkup:
+    """Volver al panel Telcel + cerrar."""
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(text="⬅️ Volver a Telcel", callback_data="menu_telcel", style="primary"),
+    )
+    builder.row(_build_button("close"))
+    return builder.as_markup()
+
+
+# ─────────────────────────────────────────────────────────────
+# IA / Generación de imágenes por IA
+# ─────────────────────────────────────────────────────────────
+
+def ai_menu() -> InlineKeyboardMarkup:
+    """Menú principal de IA: modelos, configuración, cerrar."""
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(text="🤖 Modelos", callback_data="ai_models", style="primary"),
+        InlineKeyboardButton(text="⚙️ Configuración", callback_data="ai_settings", style="primary"),
+    )
+    builder.row(_build_button("close"))
+    return builder.as_markup()
+
+
+def ai_settings_menu() -> InlineKeyboardMarkup:
+    """Menú de configuración de IA."""
+    builder = InlineKeyboardBuilder()
+    
+    builder.row(
+        InlineKeyboardButton(text="🔍 Modelos", callback_data="ai_models", style="primary"),
+    )
+    
+    builder.row(
+        InlineKeyboardButton(text="📊 768", callback_data="ai_resolution_768", style="primary"),
+        InlineKeyboardButton(text="✅ 1K", callback_data="ai_resolution_1K", style="success"),
+        InlineKeyboardButton(text="🔍 1.5K", callback_data="ai_resolution_1.5K", style="primary"),
+        InlineKeyboardButton(text="⚡ 2K", callback_data="ai_resolution_2K", style="primary"),
+        InlineKeyboardButton(text="🔥 4K", callback_data="ai_resolution_4K", style="primary"),
+    )
+    
+    builder.row(
+        InlineKeyboardButton(text="landscape 16:9", callback_data="ai_aspect_16:9", style="success"),
+        InlineKeyboardButton(text="portrait 9:16", callback_data="ai_aspect_9:16", style="primary"),
+        InlineKeyboardButton(text="cuadrado 1:1", callback_data="ai_aspect_1:1", style="primary"),
+    )
+    
+    builder.row(
+        InlineKeyboardButton(text="auto", callback_data="ai_quality_auto", style="primary"),
+        InlineKeyboardButton(text="low", callback_data="ai_quality_low", style="primary"),
+        InlineKeyboardButton(text="medium", callback_data="ai_quality_medium", style="primary"),
+        InlineKeyboardButton(text="high ✅", callback_data="ai_quality_high", style="success"),
+    )
+    
+    builder.row(
+        InlineKeyboardButton(text="PNG", callback_data="ai_format_png", style="success"),
+        InlineKeyboardButton(text="JPEG", callback_data="ai_format_jpeg", style="primary"),
+        InlineKeyboardButton(text="WEBP", callback_data="ai_format_webp", style="primary"),
+    )
+    
+    builder.row(
+        InlineKeyboardButton(text="🔒 Censura: 1", callback_data="ai_tolerance_1", style="danger"),
+        InlineKeyboardButton(text="🛡️ Censura: 3", callback_data="ai_tolerance_3", style="primary"),
+        InlineKeyboardButton(text="🔓 Censura: 5", callback_data="ai_tolerance_5", style="success"),
+    )
+    
+    builder.row(
+        InlineKeyboardButton(text="⬅️ Volver", callback_data="menu_tools", style="primary"),
+        _build_button("close"),
+    )
+    return builder.as_markup()
+
+
+def ai_model_selection_menu() -> InlineKeyboardMarkup:
+    """Menú de selección de modelos."""
+    builder = InlineKeyboardBuilder()
+    
+    builder.row(
+        InlineKeyboardButton(text="🔥 FLUX 3 Klein ✅", callback_data="ai_model_flux_3_klein", style="success"),
+    )
+    builder.row(
+        InlineKeyboardButton(text="⚡ FLUX 3", callback_data="ai_model_flux_3", style="primary"),
+    )
+    builder.row(
+        InlineKeyboardButton(text="🎨 Recraft V4", callback_data="ai_model_recraft_v4", style="primary"),
+    )
+    builder.row(
+        InlineKeyboardButton(text="📷 Seedream", callback_data="ai_model_seedream", style="primary"),
+    )
+    
+    builder.row(
+        InlineKeyboardButton(text="⬅️ Volver", callback_data="ai_settings", style="primary"),
+        _build_button("close"),
+    )
     return builder.as_markup()

@@ -1,0 +1,74 @@
+# Verifica si una sesión FRESCA (recién logueada) pasa el muro max_auth_age=0
+# del entry Prime. Repite login + entra al entry ($url) y reporta marcadores.
+# Solo lectura tras el login: no envía tarjetas ni toca métodos de pago.
+# Compatible con step_runner.py ($url/$login/$password como variables).
+# ESTADO: autorizado por el dueño (cuenta de prueba).
+mutation PrimeFreshCheck($url: String!, $login: String!, $password: String!) {
+  open: goto(url: $url, waitUntil: networkIdle) {
+    status
+    url
+    time
+  }
+  emailReady: waitForSelector(selector: "#ap_email_login", timeout: 20000) {
+    selector
+    time
+  }
+  emailTyped: type(selector: "#ap_email_login", text: $login) {
+    selector
+    time
+  }
+  continued: click(selector: "#continue") {
+    selector
+    time
+  }
+  passwordReady: waitForSelector(selector: "#ap_password", timeout: 20000) {
+    selector
+    time
+  }
+  passwordTyped: type(selector: "#ap_password", text: $password) {
+    selector
+    time
+  }
+  submitted: click(selector: "#signInSubmit") {
+    selector
+    time
+  }
+  settled: waitForTimeout(time: 8000) {
+    time
+  }
+  entry: goto(url: $url, waitUntil: networkIdle) {
+    status
+    url
+    time
+  }
+  entrySettled: waitForTimeout(time: 5000) {
+    time
+  }
+  title {
+    text: title
+  }
+  hasWidget: evaluate(content: "String(document.documentElement.outerHTML.includes('ppw-widgetState'))") {
+    value
+  }
+  widgetCount: evaluate(content: "String(document.documentElement.outerHTML.split('ppw-widgetState').length - 1)") {
+    value
+  }
+  hasOffer: evaluate(content: "String(document.documentElement.outerHTML.includes('offerToken'))") {
+    value
+  }
+  hasCustomer: evaluate(content: "String(document.documentElement.outerHTML.includes('customerID'))") {
+    value
+  }
+  finalUrl: evaluate(content: "location.href") {
+    value
+  }
+  widgetInputs: querySelectorAll(selector: "input[name=ppw-widgetState]") {
+    id
+  }
+  pageHTML: html {
+    html
+  }
+  screenshot {
+    base64
+  }
+}

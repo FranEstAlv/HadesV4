@@ -1,0 +1,86 @@
+# Mapeo completo del canal OTP sin comprar numero (usa numero ficticio 555).
+# Replica el flujo del script: identificador -> Continue -> Proceed ->
+# formulario nombre/password (dummy) -> Continue -> inventario de radios.
+# No usa waitForSelector tras el Continue: todo es evaluate/inventario para
+# que la query nunca aborte aunque el numero ficticio tome otra rama.
+# Variables: $url (entry ap/register usflex), $login (telefono dummy 10 digitos).
+mutation OtpChannelFullMap($url: String!, $login: String!) {
+  open: goto(url: $url, waitUntil: networkIdle) {
+    status
+    url
+    time
+  }
+  emailReady: waitForSelector(selector: "#ap_email_login", timeout: 20000) {
+    selector
+    time
+  }
+  emailTyped: type(selector: "#ap_email_login", text: $login) {
+    selector
+    time
+  }
+  continued: click(selector: "#continue") {
+    selector
+    time
+  }
+  settled: waitForTimeout(time: 5000) {
+    time
+  }
+  proceedClicked: evaluate(content: "(() => { const els = Array.from(document.querySelectorAll('button, input[type=\"submit\"], a, span')); for (const el of els) { const t = ((el.innerText || el.value || '') + '').toLowerCase(); if (t.includes('proceed to create an account')) { try { el.click(); } catch(e){} return 'clicked'; } } return 'not-found'; })()") {
+    value
+  }
+  settled2: waitForTimeout(time: 5000) {
+    time
+  }
+  namePresent: evaluate(content: "String(!!(document.querySelector('#ap_customer_name') || document.querySelector('input[name=\"customerName\"]')))") {
+    value
+  }
+  nameFilled: evaluate(content: "(() => { const el = document.querySelector('#ap_customer_name') || document.querySelector('input[name=\"customerName\"]'); if (el) { try { el.focus(); document.execCommand('insertText', false, 'Test User'); } catch(e){ el.value='Test User'; } return 'filled'; } return 'no-name-field'; })()") {
+    value
+  }
+  passFilled: evaluate(content: "(() => { const el = document.querySelector('#ap_password'); if (el) { try { el.focus(); document.execCommand('insertText', false, 'Test1234!x'); } catch(e){ el.value='Test1234!x'; } return 'filled'; } return 'no-pass-field'; })()") {
+    value
+  }
+  regContinued: evaluate(content: "(() => { const el = document.querySelector('#continue') || document.querySelector('input[type=\"submit\"]'); if (el) { try { el.click(); } catch(e){} return 'clicked'; } return 'not-found'; })()") {
+    value
+  }
+  settled3: waitForTimeout(time: 8000) {
+    time
+  }
+  title {
+    text: title
+  }
+  headings: querySelectorAll(selector: "h1, h2, h3") {
+    innerText
+  }
+  forms: querySelectorAll(selector: "form") {
+    id
+    className
+    innerText
+  }
+  inputs: querySelectorAll(selector: "input") {
+    id
+    className
+  }
+  buttons: querySelectorAll(selector: "button, input[type=submit]") {
+    innerText
+    id
+  }
+  selects: querySelectorAll(selector: "select") {
+    id
+  }
+  links: querySelectorAll(selector: "a") {
+    innerText
+  }
+  radioInfo: evaluate(content: "JSON.stringify(Array.from(document.querySelectorAll('input[type=\"radio\"]')).map(r => { const l = r.closest('label') || document.querySelector('label[for=\"' + r.id + '\"]'); return {id: r.id||'', name: r.name||'', value: r.value||'', checked: !!r.checked, label: ((l?l.innerText:'')||'').trim().slice(0,120)}; })).slice(0,2000)") {
+    value
+  }
+  channelKeywords: evaluate(content: "(() => { const b=(document.body.innerText||'').toLowerCase(); const out=[]; for (const kw of ['whatsapp','sms','text message','otp','verification code','send code','resend','verify mobile','verify your','authentication']) { if (b.includes(kw)) out.push(kw); } return JSON.stringify({keywords: out, snippet: (document.body.innerText||'').slice(0,600)}); })()") {
+    value
+  }
+  pageHTML: html {
+    html
+  }
+  screenshot {
+    base64
+  }
+}

@@ -1,6 +1,15 @@
 """Panel de administración oculto /batman."""
+import asyncio
+
 from aiogram import Router, F, Bot
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import (
+    InputMediaAudio,
+    InputMediaDocument,
+    InputMediaPhoto,
+    InputMediaVideo,
+    Message,
+    CallbackQuery,
+)
 from aiogram.filters import Command, StateFilter
 from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
@@ -13,6 +22,7 @@ from bot.keyboards import (
     gencookie_access_menu,
     messages_menu,
     message_confirm_menu,
+    message_pack_menu,
     memberships_menu,
     membership_confirm_menu,
     membership_remove_menu,
@@ -25,7 +35,11 @@ from bot.keyboards import (
     credits_menu,
     credits_confirm_menu,
     credits_subpanel_menu,
+    sms_admin_menu,
+    sms_admin_subpanel_menu,
+    sms_admin_confirm_menu,
 )
+from bot.services import sms as sms_svc
 from bot.services.credits import (
     get_balance,
     add_credits,
@@ -48,7 +62,7 @@ from bot.services.logger import (
 )
 from bot.config import ETERNAL_TARTARO_GROUP_ID, OLIMPO_BINS_GROUP_ID
 from bot.services.users import get_all_users
-from bot.utils.formatting import message_to_html
+from bot.utils.formatting import message_to_html, escape_html
 from bot.services.admins import (
     is_admin,
     is_super_admin,
@@ -136,6 +150,14 @@ class AdminCredits(StatesGroup):
     beneficiary = State()
     amount = State()
     confirm = State()
+
+
+class AdminSms(StatesGroup):
+    """Estados para el panel SMS virtual (solo super admins)."""
+    action = State()       # qué se está configurando
+    tier_piso = State()    # piso del tramo a crear/editar
+    value = State()        # valor a guardar (tasa, créditos)
+    confirm = State()      # confirmación de eliminar tramo
 
 
 def _admin_welcome_text() -> str:
@@ -276,6 +298,67 @@ async def cmd_cancel(message: Message, state: FSMContext):
         "✅ Operación cancelada.",
         parse_mode=ParseMode.HTML,
     )
+
+
+@router.message(Command("status"))
+async def cmd_status(message: Message):
+    """Diagnóstico rápido del bot (solo admins, Fase 10).
+
+    Verifica BD, backup diario, variables críticas y servicios externos
+    sin exponer valores sensibles. Silencio absoluto si no es admin.
+    """
+    from bot.services.admins import is_admin as _is_admin
+
+    if not await _is_admin(message.from_user.id):
+        return
+    import os
+    import sqlite3
+    from pathlib import Path
+
+    from bot.config import DATA_DIR
+
+    lines = ["<b>🖥️ Estado del bot</b>\n"]
+    # BD
+    try:
+        db_path = DATA_DIR / "bot_database.db"
+        con = sqlite3.connect(str(db_path), timeout=10)
+        users = con.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+        credits = con.execute("SELECT COUNT(*) FROM credits").fetchone()[0]
+        membs = con.execute("SELECT COUNT(*) FROM memberships").fetchone()[0]
+        mode = con.execute("PRAGMA journal_mode").fetchone()[0]
+        con.close()
+        lines.append(f"💾 BD: OK ({users} usuarios, {credits} saldos, {membs} membresías, {mode})")
+    except Exception as exc:
+        lines.append(f"💾 BD: ERROR ({type(exc).__name__})")
+    # Backup diario
+    try:
+        backups = sorted((DATA_DIR / "backups").glob("bot_database.*.db"))
+        if backups:
+            lines.append(f"🗄️ Backup: OK ({backups[-1].name})")
+        else:
+            lines.append("🗄️ Backup: sin archivos")
+    except Exception:
+        lines.append("🗄️ Backup: ERROR")
+    # Variables críticas (solo presencia, nunca valores)
+    crit = ["TELEGRAM_BOT_TOKEN", "SUPER_ADMIN_IDS", "TELCEL_DECRYPT_PASSWORD",
+            "TELCEL_ENCRYPT_PASSWORD", "TELCEL_T1_BEARER"]
+    missing = [v for v in crit if not os.getenv(v)]
+    # Compatibilidad: SUPER_ADMINS también vale
+    if "SUPER_ADMIN_IDS" in missing and os.getenv("SUPER_ADMINS"):
+        missing.remove("SUPER_ADMIN_IDS")
+    if missing:
+        lines.append(f"⚠️ Env faltantes: {', '.join(missing)}")
+    else:
+        lines.append("🔑 Env: OK")
+    # EmailApi local
+    try:
+        import urllib.request
+
+        with urllib.request.urlopen("http://127.0.0.1:3000/docs", timeout=5):
+            lines.append("📧 EmailApi: OK")
+    except Exception:
+        lines.append("📧 EmailApi: no responde")
+    await message.answer("\n".join(lines), parse_mode=ParseMode.HTML)
 
 
 @router.callback_query(F.data == "admin_back")
@@ -701,13 +784,16 @@ async def msg_select_target(callback: CallbackQuery, state: FSMContext):
     else:
         action_text = "publicar y fijar" if target in group_targets else "difundir"
         await state.set_state(AdminMessages.content)
-        await callback.message.edit_text(
+        prompt = await callback.message.edit_text(
             f"📨 <b>Enviar a {target_label}</b>\n\n"
-            f"Envíame el mensaje de texto, foto, video, documento, audio, nota de voz o GIF "
-            f"que quieres {action_text}.",
+            "Envíame el primer mensaje: texto, foto, video, documento, audio, "
+            "nota de voz o GIF.\n\n"
+            "Puedes enviar <b>varios elementos seguidos</b> para difundir un "
+            f"paquete de multimedia. Cuando termines, toca <b>Listo — vista previa</b>.",
             parse_mode=ParseMode.HTML,
             reply_markup=admin_subpanel_menu(),
         )
+        await state.update_data(prompt_msg_id=prompt.message_id)
     await callback.answer()
 
 
@@ -728,13 +814,16 @@ async def msg_receive_user_id(message: Message, state: FSMContext):
 
     await state.update_data(target_user_id=int(text))
     await state.set_state(AdminMessages.content)
-    await message.answer(
+    prompt = await message.answer(
         "👤 <b>Contenido del mensaje</b>\n\n"
-        "Envíame el texto, foto, video, documento, audio, nota de voz o GIF "
-        "que quieres enviar.",
+        "Envíame el primer mensaje: texto, foto, video, documento, audio, "
+        "nota de voz o GIF.\n\n"
+        "Puedes enviar <b>varios elementos seguidos</b> para difundir un "
+        "paquete de multimedia. Cuando termines, toca <b>Listo — vista previa</b>.",
         parse_mode=ParseMode.HTML,
         reply_markup=admin_subpanel_menu(),
     )
+    await state.update_data(prompt_msg_id=prompt.message_id)
 
 
 def _extract_media_info(message: Message) -> dict | None:
@@ -786,37 +875,133 @@ def _extract_media_info(message: Message) -> dict | None:
     return None
 
 
+# Máximo de elementos por paquete: el límite duro de Telegram para un
+# grupo multimedia es 10; de ahí nos quedamos para no romper nada.
+_PACK_LIMIT = 10
+
+_ITEM_EMOJI = {
+    "photo": "🖼️",
+    "video": "🎥",
+    "document": "📄",
+    "audio": "🎵",
+    "voice": "🎙️",
+    "animation": "🎞️",
+    "text": "📝",
+}
+
+_ITEM_LABEL = {
+    "photo": "Foto",
+    "video": "Video",
+    "document": "Documento",
+    "audio": "Audio",
+    "voice": "Nota de voz",
+    "animation": "GIF",
+    "text": "Texto",
+}
+
+
+def _item_from_message(message: Message) -> dict | None:
+    """Convierte un mensaje recibido en un elemento del paquete de difusión."""
+    media = _extract_media_info(message)
+    if media:
+        return media
+    if message.text:
+        return {
+            "content_type": "text",
+            "content": message_to_html(message),
+            "plain_text": message.text,
+        }
+    return None
+
+
+def _item_snippet(item: dict, limit: int = 80) -> str:
+    plain = item.get("plain_caption") or item.get("plain_text") or ""
+    if not plain and item.get("caption"):
+        plain = item["caption"]
+    plain = escape_html(plain.strip())
+    if len(plain) > limit:
+        plain = plain[:limit] + "…"
+    return plain or "(sin texto)"
+
+
+def _pack_status_text(items: list) -> str:
+    lines = [f"📨 <b>Paquete en armado</b> · {len(items)}/{_PACK_LIMIT}", ""]
+    for i, it in enumerate(items, 1):
+        ctype = it.get("content_type", "")
+        label = f"{_ITEM_EMOJI.get(ctype, '📎')} {_ITEM_LABEL.get(ctype, 'Archivo')}"
+        lines.append(f"{i}. {label} — <i>{_item_snippet(it, 60)}</i>")
+    lines.append("")
+    lines.append("Sigue enviando elementos o toca <b>Listo — vista previa</b>.")
+    return "\n".join(lines)
+
+
+def _target_desc(data: dict) -> tuple[str, str]:
+    """Etiqueta de destinatarios y verbo de la acción que confirma el panel."""
+    target = data.get("target")
+    group_labels = {
+        "eternal_tartaro": "Eternal Tartaro",
+        "olimpo_bins": "OLIMPO BINS",
+    }
+    if target in group_labels:
+        return group_labels[target], "Enviar y fijar"
+    if target == "user":
+        return f"usuario <code>{data.get('target_user_id')}</code>", "Enviar"
+    if target == "all":
+        return "todos los usuarios", "Enviar"
+    return "todos los admins", "Enviar"
+
+
+def _pack_preview(data: dict) -> str:
+    items = data.get("items") or []
+    target_label, action_label = _target_desc(data)
+    lines = [
+        "✉️ <b>Vista previa del envío</b>\n",
+        f"<b>Destinatarios:</b> {target_label}",
+        f"<b>Elementos:</b> {len(items)}",
+        "",
+    ]
+    for i, it in enumerate(items, 1):
+        ctype = it.get("content_type", "")
+        label = f"{_ITEM_EMOJI.get(ctype, '📎')} {_ITEM_LABEL.get(ctype, 'Archivo')}"
+        lines.append(f"{i}. {label} — <i>{_item_snippet(it)}</i>")
+    if len(items) > 1:
+        lines.append("")
+        lines.append("<i>Cada destinatario recibirá los elementos en este orden.</i>")
+    lines.append("")
+    lines.append(f"¿Confirmas {action_label.lower()}?")
+    return "\n".join(lines)
+
+
+async def _edit_or_new(message: Message, state: FSMContext, text: str, markup) -> None:
+    """Actualiza el mensaje de trabajo del panel; si falla, envía uno nuevo."""
+    from aiogram.exceptions import TelegramBadRequest
+
+    data = await state.get_data()
+    prompt_msg_id = data.get("prompt_msg_id")
+    if prompt_msg_id:
+        try:
+            await message.bot.edit_message_text(
+                text=text,
+                chat_id=message.chat.id,
+                message_id=prompt_msg_id,
+                parse_mode=ParseMode.HTML,
+                reply_markup=markup,
+            )
+            return
+        except TelegramBadRequest:
+            pass
+    sent = await message.answer(text, parse_mode=ParseMode.HTML, reply_markup=markup)
+    await state.update_data(prompt_msg_id=sent.message_id)
+
+
 @router.message(AdminMessages.content)
 async def msg_receive_content(message: Message, state: FSMContext):
-    """Recibe el contenido del mensaje a enviar (texto o multimedia)."""
+    """Recibe cada elemento del paquete (admite texto y multimedia seguidos)."""
     if not await is_admin(message.from_user.id):
         return
 
-    data = await state.get_data()
-    target = data.get("target")
-
-    media_info = _extract_media_info(message)
-
-    if media_info:
-        await state.update_data(**media_info)
-        content_preview = media_info["caption"] or "<i>Sin descripción</i>"
-        media_label = {
-            "photo": "🖼️ Foto",
-            "video": "🎥 Video",
-            "document": "📄 Documento",
-            "audio": "🎵 Audio",
-            "voice": "🎙️ Nota de voz",
-            "animation": "🎞️ GIF",
-        }.get(media_info["content_type"], "📎 Archivo")
-        preview = (
-            f"{media_label}\n\n"
-            f"<b>Descripción:</b>\n{content_preview}"
-        )
-    elif message.text:
-        content = message_to_html(message)
-        await state.update_data(content_type="text", content=content, plain_text=message.text)
-        preview = f"<b>Mensaje:</b>\n{content}"
-    else:
+    item = _item_from_message(message)
+    if not item:
         await message.answer(
             "❌ Tipo de contenido no soportado.\n\n"
             "Envía texto, foto, video, documento, audio, nota de voz o GIF.",
@@ -825,32 +1010,134 @@ async def msg_receive_content(message: Message, state: FSMContext):
         )
         return
 
-    group_labels = {
-        "eternal_tartaro": "Eternal Tartaro",
-        "olimpo_bins": "OLIMPO BINS",
-    }
-    if target in group_labels:
-        target_label = group_labels[target]
-        action_label = "Enviar y fijar"
-    elif target == "user":
-        target_label = f"usuario <code>{data.get('target_user_id')}</code>"
-        action_label = "Enviar"
-    elif target == "all":
-        target_label = "todos los usuarios"
-        action_label = "Enviar"
-    else:
-        target_label = "todos los admins"
-        action_label = "Enviar"
+    data = await state.get_data()
+    items = data.get("items") or []
+    if len(items) >= _PACK_LIMIT:
+        await message.answer(
+            f"⚠️ Máximo {_PACK_LIMIT} elementos por paquete.\n\n"
+            "Toca <b>Listo — vista previa</b> para continuar.",
+            parse_mode=ParseMode.HTML,
+            reply_markup=message_pack_menu(),
+        )
+        return
+
+    items.append(item)
+    await state.update_data(items=items)
+    await _edit_or_new(message, state, _pack_status_text(items), message_pack_menu())
+
+
+@router.callback_query(AdminMessages.content, F.data == "msg_done")
+async def msg_done_items(callback: CallbackQuery, state: FSMContext):
+    """Cierra el paquete y muestra la vista previa para confirmar."""
+    if not await is_admin(callback.from_user.id):
+        await callback.answer()
+        return
+
+    data = await state.get_data()
+    items = data.get("items") or []
+    if not items:
+        await callback.answer("Primero envía al menos un elemento.", show_alert=True)
+        return
 
     await state.set_state(AdminMessages.confirm)
-    await message.answer(
-        "✉️ <b>Vista previa del mensaje</b>\n\n"
-        f"<b>Destinatarios:</b> {target_label}\n\n"
-        f"{preview}\n\n"
-        f"¿Confirmas {action_label.lower()}?",
+    await callback.message.edit_text(
+        _pack_preview(data),
         parse_mode=ParseMode.HTML,
         reply_markup=message_confirm_menu(),
     )
+    await callback.answer()
+
+
+@router.callback_query(AdminMessages.content, F.data == "msg_reset")
+async def msg_reset_items(callback: CallbackQuery, state: FSMContext):
+    """Descarta todo lo acumulado y vuelve a empezar el paquete."""
+    if not await is_admin(callback.from_user.id):
+        await callback.answer()
+        return
+
+    await state.update_data(items=[], prompt_msg_id=callback.message.message_id)
+    await callback.message.edit_text(
+        "🗑 <b>Empezamos de nuevo</b>\n\n"
+        "Envíame el primer mensaje: texto, foto, video, documento, audio, "
+        "nota de voz o GIF.",
+        parse_mode=ParseMode.HTML,
+        reply_markup=admin_subpanel_menu(),
+    )
+    await callback.answer("Paquete limpio.")
+
+
+# Tipos admitidos en un álbum de Telegram (send_media_group). Las notas
+# de voz y los GIF no se pueden agrupar: van como mensajes sueltos.
+_GROUPABLE = {"photo", "video", "document", "audio"}
+
+
+def _item_runs(items: list) -> list[list]:
+    """Divide el paquete en corridas consecutivas del mismo grupo.
+
+    Una corrida de agrupables (máx. 10) viaja como álbum; cada elemento
+    no agrupable (texto, nota de voz, GIF) es una corrida de uno.
+    """
+    runs: list[list] = []
+    cur: list = []
+    for it in items:
+        if it.get("content_type") in _GROUPABLE:
+            cur.append(it)
+            if len(cur) == 10:
+                runs.append(cur)
+                cur = []
+        else:
+            if cur:
+                runs.append(cur)
+                cur = []
+            runs.append([it])
+    if cur:
+        runs.append(cur)
+    return runs
+
+
+async def _send_album(bot, chat_id: int, items: list):
+    """Envía varios archivos agrupables como UN álbum (send_media_group).
+
+    Devuelve el último mensaje del álbum (útil para fijar). Si el HTML de
+    alguna descripción es inválido, reintenta el álbum con texto plano.
+    """
+    from aiogram.exceptions import TelegramBadRequest
+
+    def _album_media(parse_html: bool):
+        cls_by_type = {
+            "photo": InputMediaPhoto,
+            "video": InputMediaVideo,
+            "document": InputMediaDocument,
+            "audio": InputMediaAudio,
+        }
+        media = []
+        for it in items:
+            cls = cls_by_type[
+                it["content_type"]
+                if it.get("content_type") in cls_by_type
+                else "document"
+            ]
+            caption = it.get("caption") if parse_html else (
+                it.get("plain_caption") or it.get("caption") or ""
+            )
+            media.append(
+                cls(
+                    media=it["file_id"],
+                    caption=caption or None,
+                    parse_mode=ParseMode.HTML if parse_html else None,
+                )
+            )
+        return media
+
+    try:
+        msgs = await bot.send_media_group(chat_id, media=_album_media(True))
+        return msgs[-1] if msgs else None
+    except TelegramBadRequest as exc:
+        msg_txt = str(exc).lower()
+        if "parse" in msg_txt or "entity" in msg_txt:
+            msgs = await bot.send_media_group(chat_id, media=_album_media(False))
+            return msgs[-1] if msgs else None
+        raise
 
 
 async def _send_content_message(bot, chat_id: int, data: dict):
@@ -904,9 +1191,32 @@ async def _send_content_message(bot, chat_id: int, data: dict):
         raise
 
 
+async def _send_items_to_chat(bot, chat_id: int, items: list):
+    """Envía los elementos del paquete a un chat respetando el orden.
+
+    Los archivos agrupables (foto/video/documento/audio) consecutivos se
+    mandan juntos como UN álbum (hasta 10 por álbum, límite de Telegram);
+    los textos, notas de voz y GIF van en su lugar como mensajes sueltos.
+    Devuelve (ok: bool, ultimo_mensaje_enviado | None). Un elemento con
+    fallo no corta el paquete; solo si NADA se envía se cuenta fallido.
+    """
+    last_ok = None
+    sent_items = 0
+    for run in _item_runs(items):
+        try:
+            if len(run) > 1:
+                last_ok = await _send_album(bot, chat_id, run)
+            else:
+                last_ok = await _send_content_message(bot, chat_id, run[0])
+            sent_items += len(run)
+        except Exception:
+            continue
+    return sent_items > 0, last_ok
+
+
 @router.callback_query(AdminMessages.confirm, F.data == "msg_confirm")
 async def msg_confirm_send(callback: CallbackQuery, state: FSMContext, bot):
-    """Confirma y envía el mensaje (texto o multimedia)."""
+    """Confirma y envía el paquete (texto o multimedia) a los destinatarios."""
     if not await is_admin(callback.from_user.id):
         await callback.answer()
         return
@@ -915,75 +1225,85 @@ async def msg_confirm_send(callback: CallbackQuery, state: FSMContext, bot):
     target = data.get("target")
     target_user_id = data.get("target_user_id")
 
+    items = data.get("items") or []
+    if not items and (data.get("file_id") or data.get("content")):
+        # Compatibilidad con datos de una sesión anterior.
+        items = [
+            {k: data[k] for k in (
+                "content_type", "file_id", "content",
+                "caption", "plain_caption", "plain_text",
+            ) if k in data}
+        ]
+    if not items:
+        await callback.answer("Nada pendiente por enviar.", show_alert=True)
+        return
+
     await state.clear()
-    # await callback.answer("Enviando mensajes...", show_alert=False)  #Eliminado: ya hay un answer en msg_confirm_send
 
     sent = 0
     failed = 0
     pinned = 0
     pin_failed = 0
 
+    multi = len(items) > 1
+
+    async def _pack(chat_id: int):
+        ok, last = await _send_items_to_chat(bot, chat_id, items)
+        return ok, last
+
     if target == "user":
-        try:
-            await _send_content_message(bot, target_user_id, data)
-            sent = 1
-        except Exception:
-            failed = 1
+        ok, _ = await _pack(target_user_id)
+        sent, failed = (1, 0) if ok else (0, 1)
     elif target == "all":
         users = await get_all_users()
-        for user in users:
-            try:
-                await _send_content_message(bot, user["user_id"], data)
+        for i, user in enumerate(users):
+            ok, _ = await _pack(user["user_id"])
+            if ok:
                 sent += 1
-            except Exception:
+            else:
                 failed += 1
+            if multi and i < len(users) - 1:
+                await asyncio.sleep(0.05)
     elif target == "admins":
         admin_ids = await get_all_admin_ids()
-        for admin_id in admin_ids:
-            try:
-                await _send_content_message(bot, admin_id, data)
+        for i, admin_id in enumerate(admin_ids):
+            ok, _ = await _pack(admin_id)
+            if ok:
                 sent += 1
-            except Exception:
+            else:
                 failed += 1
+            if multi and i < len(admin_ids) - 1:
+                await asyncio.sleep(0.05)
     elif target in ("eternal_tartaro", "olimpo_bins"):
         group_id = ETERNAL_TARTARO_GROUP_ID if target == "eternal_tartaro" else OLIMPO_BINS_GROUP_ID
-        try:
-            msg = await _send_content_message(bot, group_id, data)
+        ok, last = await _pack(group_id)
+        if ok and last:
             sent = 1
             try:
-                await bot.pin_chat_message(group_id, msg.message_id)
+                await bot.pin_chat_message(group_id, last.message_id)
                 pinned = 1
             except Exception:
                 pin_failed = 1
-        except Exception:
+        else:
             failed = 1
-
-    content_type = data.get("content_type", "text")
-    media_label = {
-        "photo": "fotos",
-        "video": "videos",
-        "document": "documentos",
-        "audio": "audios",
-        "voice": "notas de voz",
-        "animation": "GIFs",
-    }.get(content_type, "mensajes")
 
     # Alerta silenciosa al canal de logs
     await log_message_broadcast(bot, callback.from_user.id, target, sent, failed, pinned)
 
     result_lines = ["✅ <b>Envío completado</b>", ""]
+    result_lines.append(f"Elementos por destinatario: <b>{len(items)}</b>")
     if target in ("eternal_tartaro", "olimpo_bins"):
-        result_lines.append(f"{media_label.capitalize()} enviados: <b>{sent}</b>")
-        result_lines.append(f"Fijados: <b>{pinned}</b>")
         if pin_failed:
             result_lines.append(f"⚠️ No se pudo fijar: <b>{pin_failed}</b>")
             result_lines.append("<i>Verifica que el bot sea admin con permiso para fijar.</i>")
         if failed:
-            result_lines.append(f"❌ Fallidos: <b>{failed}</b>")
+            result_lines.append(f"❌ Sin entrega: <b>{failed}</b>")
+        else:
+            result_lines.append("📍 Publicado y fijado.")
     else:
-        result_lines.append(f"{media_label.capitalize()} enviados: <b>{sent}</b>")
+        result_lines.append(f"Entregado a: <b>{sent}</b>")
         if failed:
-            result_lines.append(f"Fallidos: <b>{failed}</b>")
+            result_lines.append(f"❌ Sin entrega: <b>{failed}</b>")
 
     await callback.message.edit_text(
         "\n".join(result_lines),
@@ -2172,6 +2492,26 @@ async def credits_receive_beneficiary(message: Message, state: FSMContext, bot: 
     data = await state.get_data()
     action = data.get("action")
 
+    # Regla: ningún admin puede asignarse o retirarse créditos a sí mismo.
+    # Incluye super admins: el saldo propio no se toca desde el panel.
+    # Se niega con mensaje (es un admin autorizado, no un intruso) y se
+    # registra el intento en el canal de logs.
+    if action in ("add", "withdraw") and beneficiary_id == message.from_user.id:
+        await log_operation_failed(
+            bot,
+            message.from_user.id,
+            f"autoasignación de créditos ({action})",
+            "el admin intentó operar sobre su propio saldo",
+        )
+        await state.clear()
+        await message.answer(
+            "⛔ <b>No puedes asignarte créditos a ti mismo.</b>\n\n"
+            "Pide a otro administrador que lo haga.",
+            parse_mode=ParseMode.HTML,
+            reply_markup=credits_subpanel_menu(),
+        )
+        return
+
     if action == "query":
         balance = await get_balance(beneficiary_id)
         transactions = await get_transactions(beneficiary_id, limit=5)
@@ -2238,6 +2578,7 @@ async def credits_receive_amount(message: Message, state: FSMContext, bot: Bot):
         "withdraw": ("Retirar", "de", "danger"),
     }
     verb, preposition, _ = action_preview[action]
+    after_preview = current_balance + (amount if action == "add" else -amount)
 
     await message.answer(
         f"{'➕' if action == 'add' else '➖'} <b>Confirmar operación</b>\n\n"
@@ -2245,8 +2586,12 @@ async def credits_receive_amount(message: Message, state: FSMContext, bot: Bot):
         f"• Usuario: <code>{beneficiary_id}</code>\n"
         f"• Cantidad: <b>{amount}</b> créditos\n"
         f"• Saldo actual: <b>{current_balance}</b> créditos\n"
-        f"• Saldo después: <b>{current_balance + (amount if action == 'add' else -amount)}</b> créditos\n\n"
-        f"¿Confirmas que quieres {verb.lower()} {amount} créditos {preposition} este usuario?",
+        + (
+            f"• Saldo después: <b>{after_preview}</b> créditos\n\n"
+            if after_preview >= 0
+            else "• ⚠️ El retiro supera el saldo actual: la operación será rechazada.\n\n"
+        )
+        + f"¿Confirmas que quieres {verb.lower()} {amount} créditos {preposition} este usuario?",
         parse_mode=ParseMode.HTML,
         reply_markup=credits_confirm_menu(),
     )
@@ -2267,6 +2612,17 @@ async def credits_confirm_action(callback: CallbackQuery, state: FSMContext, bot
 
     await state.clear()
 
+    if action not in ("add", "withdraw") or not isinstance(
+        beneficiary_id, int
+    ) or not isinstance(amount, int) or amount <= 0:
+        await callback.message.edit_text(
+            "❌ Sesión inválida. Abre de nuevo el panel con /batman.",
+            parse_mode=ParseMode.HTML,
+            reply_markup=credits_subpanel_menu(),
+        )
+        await callback.answer()
+        return
+
     try:
         if action == "add":
             new_balance = await add_credits(
@@ -2282,6 +2638,7 @@ async def credits_confirm_action(callback: CallbackQuery, state: FSMContext, bot
                 beneficiary_id,
                 amount,
                 reason="Retiro desde panel de admin",
+                admin_id=admin_id,
             )
             if not success:
                 await log_operation_failed(
@@ -2363,6 +2720,474 @@ async def credits_cancel_flow(callback: CallbackQuery, state: FSMContext):
         reply_markup=credits_subpanel_menu(),
     )
     await callback.answer()
+
+
+# ─────────────────────────────────────────────────────────────
+# Panel SMS virtual (solo super admins)
+# ─────────────────────────────────────────────────────────────
+
+def _sms_home_text(
+    stats: dict, balance: str, enabled: bool, usd_mxn: str
+) -> str:
+    status = "🟢 Activo" if enabled else "🔴 Inactivo"
+    return (
+        "📱 <b>SMS virtual — Panel de control</b>\n"
+        "━━━━━━━━━━━━━━\n"
+        f"🔛 Estado: <b>{status}</b>\n"
+        f"💰 Saldo HeroSMS: <b>${balance}</b>\n"
+        f"💱 Tipo de cambio: <code>1 USD = ${usd_mxn} MXN</code>\n"
+        "━━━━━━━━━━━━━━\n"
+        f"📊 Pedidos totales: <code>{stats['total']}</code>\n"
+        f"  ✅ Exitosos: <code>{stats['success']}</code>\n"
+        f"  ❌ Fallidos: <code>{stats['failed']}</code>\n"
+        f"  🚫 Cancelados: <code>{stats['cancelled']}</code>\n"
+        f"  ⏳ Pendientes: <code>{stats['pending']}</code>"
+    )
+
+
+def _sms_tiers_text(tiers: dict, usd_mxn: str) -> str:
+    try:
+        rate = float(usd_mxn)
+    except Exception:
+        rate = 18.5
+    pisos = sorted(tiers)
+    if not pisos:
+        body = "  (sin tramos configurados)"
+    else:
+        lines = []
+        for i, piso in enumerate(pisos):
+            techo = pisos[i + 1] - 1 if i + 1 < len(pisos) else "∞"
+            usd_lo = piso / rate if rate else 0
+            lines.append(
+                f"  <code>${piso}–${techo}</code> MXN "
+                f"(<code>${usd_lo:.2f} USD+</code>) → <b>{tiers[piso]} cr</b>"
+            )
+        body = "\n".join(lines)
+    return (
+        "📊 <b>Tramos de precios SMS</b>\n"
+        "━━━━━━━━━━━━━━\n"
+        f"{body}\n"
+        "━━━━━━━━━━━━━━\n"
+        "<i>El precio en MXN sale de USD × tipo de cambio.\n"
+        "Se usa el tramo más alto cuyo piso no supere el precio.</i>"
+    )
+
+
+def _sms_config_text(enabled: bool, usd_mxn: str) -> str:
+    return (
+        "⚙️ <b>Configuración SMS</b>\n"
+        "━━━━━━━━━━━━━━\n"
+        f"🔛 Módulo: {'✅ Activo' if enabled else '❌ Inactivo'}\n"
+        f"💱 Tipo de cambio: <code>1 USD = ${usd_mxn} MXN</code>\n"
+        "━━━━━━━━━━━━━━\n"
+        "<i>Los precios en créditos se configuran en Tramos de precios.</i>"
+    )
+
+
+@router.callback_query(F.data == "admin_sms")
+async def cb_admin_sms(callback: CallbackQuery, state: FSMContext):
+    """Panel SMS virtual: solo super admins."""
+    if not is_super_admin(callback.from_user.id):
+        await callback.answer()
+        return
+    await state.clear()
+    stats = await sms_svc.get_stats()
+    balance = await sms_svc.api_balance()
+    enabled = await sms_svc.is_enabled()
+    usd_mxn = await sms_svc.get_usd_to_mxn()
+    await callback.message.edit_text(
+        _sms_home_text(stats, balance, enabled, usd_mxn),
+        parse_mode=ParseMode.HTML,
+        reply_markup=sms_admin_menu(),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "smsadm_stats")
+async def smsadm_stats(callback: CallbackQuery, state: FSMContext):
+    if not is_super_admin(callback.from_user.id):
+        await callback.answer()
+        return
+    stats = await sms_svc.get_stats()
+    balance = await sms_svc.api_balance()
+    enabled = await sms_svc.is_enabled()
+    usd_mxn = await sms_svc.get_usd_to_mxn()
+    await callback.message.edit_text(
+        _sms_home_text(stats, balance, enabled, usd_mxn),
+        parse_mode=ParseMode.HTML,
+        reply_markup=sms_admin_menu(),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "smsadm_toggle")
+async def smsadm_toggle(callback: CallbackQuery, state: FSMContext):
+    if not is_super_admin(callback.from_user.id):
+        await callback.answer()
+        return
+    enabled = await sms_svc.set_enabled(not await sms_svc.is_enabled())
+    stats = await sms_svc.get_stats()
+    balance = await sms_svc.api_balance()
+    usd_mxn = await sms_svc.get_usd_to_mxn()
+    await callback.message.edit_text(
+        _sms_home_text(stats, balance, enabled, usd_mxn),
+        parse_mode=ParseMode.HTML,
+        reply_markup=sms_admin_menu(),
+    )
+    await callback.answer(f"Módulo {'activado' if enabled else 'desactivado'}")
+
+
+@router.callback_query(F.data == "smsadm_orders")
+async def smsadm_orders(callback: CallbackQuery, state: FSMContext):
+    if not is_super_admin(callback.from_user.id):
+        await callback.answer()
+        return
+    orders = await sms_svc.get_recent_orders(limit=10)
+    if not orders:
+        text = (
+            "📋 <b>Últimos pedidos SMS</b>\n━━━━━━━━━━━━━━\n(sin pedidos aún)"
+        )
+    else:
+        icons = {"success": "✅", "failed": "❌", "cancelled": "🚫", "pending": "⏳"}
+        lines = ["📋 <b>Últimos pedidos SMS</b>", "━━━━━━━━━━━━━━"]
+        for o in orders:
+            icon = icons.get(o.get("status", ""), "❓")
+            lines.append(
+                f"{icon} <code>{o.get('tg_id', '?')}</code> "
+                f"@{o.get('username', '') or 'N/A'}\n"
+                f"   {o.get('service_name', '?')} · {o.get('country_name', '?')} "
+                f" 💳 {o.get('credits_charged', 0)} cr "
+                f" 📅 {(o.get('requested_at') or '')[:16].replace('T', ' ')}\n"
+                f"   🎫 <code>{o.get('order_id', '')}</code>"
+            )
+        text = "\n".join(lines)
+    await callback.message.edit_text(
+        text, parse_mode=ParseMode.HTML, reply_markup=sms_admin_subpanel_menu()
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "smsadm_config")
+async def smsadm_config(callback: CallbackQuery, state: FSMContext):
+    if not is_super_admin(callback.from_user.id):
+        await callback.answer()
+        return
+    enabled = await sms_svc.is_enabled()
+    usd_mxn = await sms_svc.get_usd_to_mxn()
+    from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+
+    markup = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="💱 Cambiar tipo de cambio",
+                    callback_data="smsadm_set_rate",
+                    style="primary",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔛 Activar/Desactivar",
+                    callback_data="smsadm_toggle",
+                    style="primary",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔄 Ver precios API",
+                    callback_data="smsadm_prices",
+                    style="primary",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="⬅️ Volver a SMS", callback_data="admin_sms", style="primary"
+                )
+            ],
+        ]
+    )
+    await callback.message.edit_text(
+        _sms_config_text(enabled, usd_mxn),
+        parse_mode=ParseMode.HTML,
+        reply_markup=markup,
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "smsadm_set_rate")
+async def smsadm_set_rate(callback: CallbackQuery, state: FSMContext):
+    if not is_super_admin(callback.from_user.id):
+        await callback.answer()
+        return
+    usd_mxn = await sms_svc.get_usd_to_mxn()
+    await state.set_state(AdminSms.value)
+    await state.update_data(sms_field="usd_to_mxn")
+    await callback.message.edit_text(
+        "💱 <b>Cambiar tipo de cambio USD → MXN</b>\n"
+        "━━━━━━━━━━━━━━\n"
+        f"Valor actual: <code>1 USD = ${usd_mxn} MXN</code>\n\n"
+        "Envíame el nuevo tipo de cambio.\n"
+        "<i>Ejemplo: <code>18.5</code></i>",
+        parse_mode=ParseMode.HTML,
+        reply_markup=sms_admin_subpanel_menu(),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "smsadm_prices")
+async def smsadm_prices(callback: CallbackQuery, state: FSMContext):
+    if not is_super_admin(callback.from_user.id):
+        await callback.answer()
+        return
+    await callback.answer("⏳ Consultando precios...")
+    try:
+        services = await sms_svc.fetch_services()
+        wa = next(
+            (s for s in services if "whatsapp" in (s.get("name") or "").lower()),
+            services[0] if services else None,
+        )
+        rows = await sms_svc.fetch_countries(wa["ID"]) if wa else []
+    except Exception as exc:
+        logger.warning("smsadm_prices: %s", exc)
+        rows = []
+    usd_mxn = await sms_svc.get_usd_to_mxn()
+    try:
+        rate = float(usd_mxn)
+    except Exception:
+        rate = 18.5
+    lines = ["🔄 <b>Precios API (WhatsApp)</b>", "━━━━━━━━━━━━━━"]
+    for r in rows[:10]:
+        try:
+            usd = float(r.get("price", 0))
+            mxn = usd * rate
+            cr = await sms_svc.calc_credits(str(r.get("price", "0")))
+            lines.append(
+                f"  • {r.get('name', '?')}: <code>${usd:.2f} USD</code> / "
+                f"<code>${mxn:.0f} MXN</code> → <b>{cr} cr</b>"
+            )
+        except Exception:
+            continue
+    if len(lines) == 2:
+        lines.append("  (sin datos)")
+    await callback.message.edit_text(
+        "\n".join(lines),
+        parse_mode=ParseMode.HTML,
+        reply_markup=sms_admin_subpanel_menu(),
+    )
+
+
+@router.callback_query(F.data == "smsadm_tiers")
+async def smsadm_tiers(callback: CallbackQuery, state: FSMContext):
+    if not is_super_admin(callback.from_user.id):
+        await callback.answer()
+        return
+    tiers = await sms_svc.get_credit_tiers()
+    usd_mxn = await sms_svc.get_usd_to_mxn()
+    from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+
+    rows = []
+    for piso in sorted(tiers):
+        rows.append(
+            [
+                InlineKeyboardButton(
+                    text=f"✏️ ${piso} MXN+ → {tiers[piso]} cr",
+                    callback_data=f"smsadm_tier_edit:{piso}",
+                    style="primary",
+                )
+            ]
+        )
+    rows.append(
+        [
+            InlineKeyboardButton(
+                text="➕ Agregar tramo", callback_data="smsadm_tier_add", style="success"
+            )
+        ]
+    )
+    rows.append(
+        [
+            InlineKeyboardButton(
+                text="⬅️ Volver a SMS", callback_data="admin_sms", style="primary"
+            )
+        ]
+    )
+    await callback.message.edit_text(
+        _sms_tiers_text(tiers, usd_mxn),
+        parse_mode=ParseMode.HTML,
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=rows),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "smsadm_tier_add")
+async def smsadm_tier_add(callback: CallbackQuery, state: FSMContext):
+    if not is_super_admin(callback.from_user.id):
+        await callback.answer()
+        return
+    await state.set_state(AdminSms.value)
+    await state.update_data(sms_field="tier_add")
+    await callback.message.edit_text(
+        "➕ <b>Agregar tramo de precio</b>\n"
+        "━━━━━━━━━━━━━━\n"
+        "Envíame el piso en MXN y los créditos.\n\n"
+        "<i>Formato: <code>piso:créditos</code></i>\n"
+        "<i>Ejemplo: <code>25:55</code> → desde $25 MXN = 55 créditos</i>",
+        parse_mode=ParseMode.HTML,
+        reply_markup=sms_admin_subpanel_menu(),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("smsadm_tier_edit:"))
+async def smsadm_tier_edit(callback: CallbackQuery, state: FSMContext):
+    if not is_super_admin(callback.from_user.id):
+        await callback.answer()
+        return
+    try:
+        piso = int(callback.data.split(":")[1])
+    except (IndexError, ValueError):
+        await callback.answer("Tramo inválido")
+        return
+    tiers = await sms_svc.get_credit_tiers()
+    current = tiers.get(piso, 0)
+    await state.set_state(AdminSms.value)
+    await state.update_data(sms_field="tier_edit", sms_piso=piso)
+    await callback.message.edit_text(
+        "✏️ <b>Editar tramo</b>\n"
+        "━━━━━━━━━━━━━━\n"
+        f"💲 Desde <code>${piso} MXN</code>\n"
+        f"Créditos actuales: <code>{current} cr</code>\n\n"
+        "Envíame el nuevo número de créditos.\n"
+        "<i>Envíame <code>0</code> para eliminar el tramo.</i>",
+        parse_mode=ParseMode.HTML,
+        reply_markup=sms_admin_subpanel_menu(),
+    )
+    await callback.answer()
+
+
+@router.message(AdminSms.value)
+async def sms_receive_value(message: Message, state: FSMContext):
+    """Recibe tasa de cambio o créditos de tramo según el campo activo."""
+    if not is_super_admin(message.from_user.id):
+        return
+    data = await state.get_data()
+    field = data.get("sms_field")
+    text = (message.text or "").strip()
+
+    if field == "usd_to_mxn":
+        try:
+            rate = float(text)
+            assert 0 < rate <= 1000
+        except Exception:
+            await message.answer(
+                "❌ Valor inválido. Ejemplo: <code>18.5</code>",
+                parse_mode=ParseMode.HTML,
+                reply_markup=sms_admin_subpanel_menu(),
+            )
+            return
+        saved = await sms_svc.set_usd_to_mxn(rate)
+        await state.clear()
+        await message.answer(
+            f"✅ Tipo de cambio actualizado: <code>1 USD = ${saved} MXN</code>.",
+            parse_mode=ParseMode.HTML,
+            reply_markup=sms_admin_subpanel_menu(),
+        )
+        return
+
+    if field == "tier_add":
+        parts = text.split(":")
+        if len(parts) != 2:
+            await message.answer(
+                "❌ Formato incorrecto. Usa <code>piso:créditos</code>\n"
+                "<i>Ejemplo: <code>25:55</code></i>",
+                parse_mode=ParseMode.HTML,
+                reply_markup=sms_admin_subpanel_menu(),
+            )
+            return
+        try:
+            piso = int(parts[0].strip())
+            cr = int(parts[1].strip())
+            assert piso >= 0 and 1 <= cr <= 10000
+        except Exception:
+            await message.answer(
+                "❌ Valores inválidos. Ejemplo: <code>25:55</code>",
+                parse_mode=ParseMode.HTML,
+                reply_markup=sms_admin_subpanel_menu(),
+            )
+            return
+        await sms_svc.set_credit_tier(piso, cr)
+        await state.clear()
+        await message.answer(
+            f"✅ Tramo guardado: desde <code>${piso} MXN</code> → "
+            f"<code>{cr} cr</code>.",
+            parse_mode=ParseMode.HTML,
+            reply_markup=sms_admin_subpanel_menu(),
+        )
+        return
+
+    if field == "tier_edit":
+        piso = data.get("sms_piso")
+        try:
+            cr = int(text)
+            assert 0 <= cr <= 10000
+        except Exception:
+            await message.answer(
+                "❌ Valor inválido. Envía un entero (0 para eliminar).",
+                parse_mode=ParseMode.HTML,
+                reply_markup=sms_admin_subpanel_menu(),
+            )
+            return
+        if cr == 0:
+            await sms_svc.delete_credit_tier(piso)
+            await state.clear()
+            await message.answer(
+                f"🗑 Tramo <code>${piso} MXN+</code> eliminado.",
+                parse_mode=ParseMode.HTML,
+                reply_markup=sms_admin_subpanel_menu(),
+            )
+        else:
+            await sms_svc.set_credit_tier(piso, cr)
+            await state.clear()
+            await message.answer(
+                f"✅ Tramo <code>${piso} MXN+</code> → <code>{cr} cr</code> "
+                "actualizado.",
+                parse_mode=ParseMode.HTML,
+                reply_markup=sms_admin_subpanel_menu(),
+            )
+        return
+
+    await state.clear()
+    await message.answer(
+        "❌ Sesión inválida. Abre de nuevo el panel con /batman.",
+        parse_mode=ParseMode.HTML,
+        reply_markup=sms_admin_subpanel_menu(),
+    )
+
+
+@router.callback_query(F.data == "smsadm_cancel")
+async def smsadm_cancel(callback: CallbackQuery, state: FSMContext):
+    if not is_super_admin(callback.from_user.id):
+        await callback.answer()
+        return
+    await state.clear()
+    await callback.message.edit_text(
+        "❌ <b>Operación cancelada.</b>",
+        parse_mode=ParseMode.HTML,
+        reply_markup=sms_admin_subpanel_menu(),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("smsadm_"))
+async def smsadm_fallback(callback: CallbackQuery, state: FSMContext):
+    """Red de seguridad: botones huérfanos no congelan el panel."""
+    if not is_super_admin(callback.from_user.id):
+        await callback.answer()
+        return
+    await state.clear()
+    await callback.answer(
+        "La sesión del panel expiró. Abre de nuevo con /batman.",
+        show_alert=True,
+    )
 
 
 def register_admin_handlers(dp):

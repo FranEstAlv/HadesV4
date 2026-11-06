@@ -97,3 +97,15 @@ sudo systemctl enable --now nombre-del-servicio.service
 - Saldo y validación de llave usan estilo CapSolver: `POST https://api.2captcha.com/getBalance` con JSON `{"clientKey": "..."}`.
 - Respuesta válida: `{"errorId":0,"balance":...}`.
 - El protocolo viejo (`GET .../getBalance?key=...&json=1`) devuelve `ERROR_KEY_DOES_NOT_EXIST` aunque la llave sirva y tenga saldo. Es un falso negativo: nunca declarar vencida una llave solo por esa vía sin probar el POST JSON primero.
+
+## Gates Telcel (2026-11-03)
+
+- Cuatro gates integrados desde `evidencias/apiTelcel` (copia, no se borra el original):
+  - `/tcs` — saldo de línea (Mi Telcel API).
+  - `/tcm` — consumo de megas (pay.telcel.com + WAF Stormcaster).
+  - `/tcf` — pago de factura (Amigo Paguitos / ClaroPay).
+  - `/tcr` — recarga con tarjeta (saldo, amigo_sin_limite, internet_amigo, internet_tiempo).
+- Panel: botón "Telcel" en el menú de /start y en el panel Herramientas. Comandos `/telcel`, `/tcs`, `/tcm`, `/tcf`, `/tcr`.
+- Todos cobran por créditos. Los costos están en `bot.config` como constantes independientes con valor por defecto provisional (5/5/10/10) y sobrescribibles vía variables de entorno `TELCEL_*_COST`; Fernando aún no define el precio final. Flujo de cobro idéntico a `/rfc`: confirmación previa, descuento, y reembolso automático si el gate falla técnicamente.
+- Los flujos de red/WASM corren en `asyncio.to_thread` para no bloquear el event loop.
+- Dependencia nueva: `wasmtime>=21.0.0` (ya instalada en el venv y en `requirements.txt`). Requerida por `bot/services/telcel/wafSolver/stormCasterCse.py` + `stormcaster.wasm` (copia de la evidencia).

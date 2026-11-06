@@ -4,6 +4,7 @@ en iframe de Stripe Elements (navegador). Por HTTP el backend
 responde thank-you estático sin crear el cargo. NO mapear este
 HANDLER aunque el archivo esté presente en el repo.
 
+from bot.utils.cleanup import schedule_delete
 Comandos:
     /ir      <cc>|<mes>|<año>|<cvv>   -> verifica 1 tarjeta
     /irmass  (responde a un mensaje)  -> verifica un lote (max 10)
@@ -31,6 +32,7 @@ from bot.gates.checker import _pick_proxy
 from bot.services.memberships import get_membership, is_membership_active
 from bot.services.admins import is_admin
 from bot.services.credits import deduct_credits
+from bot.config import MASS_CREDIT_COST
 from bot.utils.bin_lookup import get_card_info
 from bot.utils.formatting import (
     dead_emoji,
@@ -47,7 +49,7 @@ IRIS_PLANS = {"olimpo", "mensual"}
 IRIS_SINGLE_COOLDOWN = 20
 IRIS_MASS_COOLDOWN = 30
 IRIS_MASS_LIMIT = 10
-IRIS_MASS_CREDIT_COST = 5
+IRIS_MASS_CREDIT_COST = MASS_CREDIT_COST  # 5, gratis para admins y Olimpo
 
 _GATE_CUSTOM_EMOJI_ID = "5454074580010295588"
 _LIVE_CUSTOM_EMOJI_ID = "5021905410089550576"
@@ -188,14 +190,6 @@ def _result_markup() -> InlineKeyboardMarkup:
     )
 
 
-async def _delete_after(message: Message, delay: int = 30) -> None:
-    try:
-        await asyncio.sleep(delay)
-        await message.delete()
-    except Exception:
-        pass
-
-
 def _extract_cards_from_text(text: Optional[str]) -> List[str]:
     """Extrae tarjetas cc|mes|año|cvv de un bloque de texto."""
     if not text:
@@ -332,7 +326,7 @@ async def cmd_iris_single(message: Message):
         )
 
     if result.get("status") != "✅ Live":
-        asyncio.create_task(_delete_after(result_msg))
+        schedule_delete(result_msg)
 
 
 @router.message(Command("irmass"))
@@ -434,7 +428,7 @@ async def cmd_iris_mass(message: Message):
             except TelegramBadRequest:
                 sent = await message.answer(escape_html(text), reply_markup=_result_markup())
             if result.get("status") != "✅ Live":
-                asyncio.create_task(_delete_after(sent))
+                schedule_delete(sent)
 
             processed_count += 1
             if processed_count < total:

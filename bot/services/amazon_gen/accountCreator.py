@@ -408,7 +408,8 @@ def switchToSms (sess ,resp ,baseUrl ):
                     s2 =BeautifulSoup (r2 .text ,'html.parser')
                     ch2 =detectChannel (r2 .text )
                     if (s2 .find ('input',{'name':'code'})or ch2 =='sms')and ch2 !='whatsapp':return r2
-                except Exception :pass
+                except Exception as _e:
+                    logger .debug ('switchToSms postForm fallo: %s',_e )
                 raise RegError ('sms_blocked')
     sms_patterns =[('newContactType','SMS_OTP'),('newContactType','sms'),('requestedContactType','sms'),('otpChannel','SMS'),('otpChannel','sms'),('deliveryMechanism','sms'),('codeDeliveryType','SMS'),('verificationMechanism','sms'),('channel','sms'),('contactType','sms')]
     for fname ,fval in sms_patterns :
@@ -433,7 +434,8 @@ def switchToSms (sess ,resp ,baseUrl ):
                 r2 =sess .get (full ,headers ={'Referer':str (resp .url ),'Sec-Fetch-Dest':'document','Sec-Fetch-Mode':'navigate','Sec-Fetch-Site':'same-origin'},timeout =60 )
                 ch2 =detectChannel (r2 .text )
                 if ch2 =='sms'or BeautifulSoup (r2 .text ,'html.parser').find ('input',{'name':'code'}):return r2
-            except Exception :pass
+            except Exception as _e:
+                logger .debug ('switchToSms GET fallo: %s',_e )
     if ch =='whatsapp':
         for url in [f'{baseUrl }/ap/cvf/verify?action=SWITCH_CONTACT_TYPE_IN_CVF&newContactType=SMS_OTP',f'{baseUrl }/ap/cvf/verify?action=switchDefaultCvfOtpChannel&deliveryType=sms']:
             try :
@@ -454,7 +456,8 @@ def selectEmailJP (sess ,resp ,baseUrl ):
                 r2 =sess .get (full ,headers ={'Referer':str (resp .url ),'Sec-Fetch-Dest':'document','Sec-Fetch-Mode':'navigate','Sec-Fetch-Site':'same-origin'},timeout =60 )
                 s2 =BeautifulSoup (r2 .text ,'html.parser')
                 if s2 .find ('input',{'name':'code'})or detectChannel (r2 .text )=='email':return r2
-            except Exception :pass
+            except Exception as _e:
+                logger .debug ('selectEmailJP GET fallo: %s',_e )
     for ft in soup .find_all ('form'):
         for inp in ft .find_all ('input'):
             if inp .get ('value','').lower ()in ('email','email_otp','email_address'):
@@ -466,7 +469,8 @@ def selectEmailJP (sess ,resp ,baseUrl ):
                     r2 =postForm (sess ,act ,pl ,str (resp .url ),baseUrl )
                     s2 =BeautifulSoup (r2 .text ,'html.parser')
                     if s2 .find ('input',{'name':'code'})or detectChannel (r2 .text )=='email':return r2
-                except Exception :pass
+                except Exception as _e:
+                    logger .debug ('selectEmailJP postForm fallo: %s',_e )
     for url in [f'{baseUrl }/ap/cvf/verify?action=SWITCH_CONTACT_TYPE_IN_CVF&newContactType=EMAIL',f'{baseUrl }/ap/cvf/verify?action=switchDefaultCvfOtpChannel&deliveryType=email',f'{baseUrl }/ap/cvf/request?contactType=EMAIL']:
         try :
             r2 =sess .get (url ,headers ={'Referer':str (resp .url ),'Sec-Fetch-Dest':'document','Sec-Fetch-Mode':'navigate','Sec-Fetch-Site':'same-origin'},timeout =60 )
@@ -527,13 +531,13 @@ def requestResend (sess ,resp ,baseUrl ):
     logger .info ('resend solicitado url=%s len=%s',getattr (r ,'url','?'),len (getattr (r ,'text','')or ''))
     return r
 
-def collectPhone (sess ,resp ,country ,baseUrl ,short ,user ,ua ,dynUrls ,dynHashes ,status =None ,phone_out =None ):
+def collectPhone (sess ,resp ,country ,baseUrl ,short ,user ,ua ,dynUrls ,dynHashes ,status =None ,phone_out =None ,existing_phone=None ):
     """Completa el paso de CVF que exige un numero de telefono movil.
 
     Compra un numero virtual (HeroSMS), lo envia en el formulario de
     verificacion, espera el SMS con el codigo y responde ese codigo.
-    Si Amazon no acepta el numero o no llega el SMS, se cancela el pedido
-    para que el proveedor reembolse.
+    Si ``existing_phone`` se pasa, se reusa ese mismo numero en vez de
+    comprar otro (evita doble cobro cuando Amazon pide reintento).
     """
     soup =BeautifulSoup (resp .text ,'html.parser')
     ft =soup .find ('form',action ='verify')or soup .find ('form')
@@ -550,13 +554,19 @@ def collectPhone (sess ,resp ,country ,baseUrl ,short ,user ,ua ,dynUrls ,dynHas
         pl ['cvf_phone_cc']=cc
     emitStatus (status ,'Amazon pide verificar un numero de celular. Comprando numero y esperando el SMS...')
     sms =HeroSms ()
-    if not sms .available ():raise RegError ('sms_not_configured')
-    aid ,number =sms .buy (country )
-    local =sms .local_number (number ,country )
-    logger .info ('SMS number ready for %s (order %s)',cc ,aid )
+    if existing_phone :
+        local =existing_phone
+        aid =None
+        logger .info ('Reusando numero SMS existente para %s',cc )
+    else :
+        if not sms .available ():raise RegError ('sms_not_configured')
+        aid ,number =sms .buy (country )
+        local =sms .local_number (number ,country )
+        logger .info ('SMS number ready for %s (order %s)',cc ,aid )
     if phone_out is not None :
         try :phone_out ['number'] =local
-        except Exception :pass
+        except Exception as _e:
+            logger .debug ('phone_out no acepto numero: %s',_e )
     pl ['cvf_phone_num']=local
     pl ['cvf_action']='collect'
     try :
@@ -618,7 +628,7 @@ def collectPhone (sess ,resp ,country ,baseUrl ,short ,user ,ua ,dynUrls ,dynHas
     else :sms .cancel (aid )
     return r
 
-def submitOtp (sess ,resp ,code ,phoneShort ,user ,ua ,baseUrl ,dynUrls ,dynHashes ,regDomain ='amazon.com',targetDomain =None ,country =None ,allowPhone =True ,status =None ,phone_out =None ):
+def submitOtp (sess ,resp ,code ,phoneShort ,user ,ua ,baseUrl ,dynUrls ,dynHashes ,regDomain ='amazon.com',targetDomain =None ,country =None ,allowPhone =True ,status =None ,phone_out =None ,existing_phone =None ):
     targetDomain =targetDomain or regDomain
     soup =BeautifulSoup (resp .text ,'html.parser')
     forms =[f for f in soup .find_all ('form')if f .find ('input',{'name':'code'})]
@@ -672,7 +682,7 @@ def submitOtp (sess ,resp ,code ,phoneShort ,user ,ua ,baseUrl ,dynUrls ,dynHash
             # la pantalla del telefono: el codigo no fue aceptado. Se reintenta
             # con otro numero en vez de terminar el intento.
             if not allowPhone :raise RegError ('sms_code_rejected')
-            r =collectPhone (sess ,r ,country or 'US',baseUrl ,phoneShort ,user ,ua ,dynUrls ,dynHashes ,status ,phone_out =phone_out )
+            r =collectPhone (sess ,r ,country or 'US',baseUrl ,phoneShort ,user ,ua ,dynUrls ,dynHashes ,status ,phone_out =phone_out ,existing_phone =existing_phone )
             if not isAuth (sess ):raise RegError ('sms_code_rejected')
             return r
         raise RegError ('otp_failed')
@@ -903,7 +913,7 @@ class Creator :
 
         emitStatus (self .on_status ,'Amazon envio el codigo a tu correo. Validando...')
         phoneBox ={}
-        finalR =submitOtp (sess ,otpR ,code2 ,short ,user ,ua ,base ,dynUrls ,dynHashes ,regDomain =self .domain ,targetDomain =self .domain ,country =self .country ,status =self .on_status ,phone_out =phoneBox )
+        finalR =submitOtp (sess ,otpR ,code2 ,short ,user ,ua ,base ,dynUrls ,dynHashes ,regDomain =self .domain ,targetDomain =self .domain ,country =self .country ,status =self .on_status ,phone_out =phoneBox ,existing_phone =self .cvfPhone )
         self .cvfPhone =phoneBox .get ('number') or None
         # La pagina que queda tras validar el OTP es donde Amazon avisa que la
         # cuenta quedo suspendida. Antes se descartaba y la cuenta se entregaba

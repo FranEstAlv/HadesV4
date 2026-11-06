@@ -5,7 +5,6 @@ Respuesta con la plantilla Hades igual que el resto de gates.
 """
 from __future__ import annotations
 
-import asyncio
 import time
 from typing import Dict
 
@@ -19,6 +18,7 @@ from bot.gates.paypal_guest import ghost_check
 from bot.services.memberships import get_membership, is_membership_active
 from bot.services.admins import is_admin
 from bot.utils.bin_lookup import get_card_info
+from bot.utils.cleanup import schedule_delete
 from bot.utils.formatting import (
     dead_emoji,
     escape_html,
@@ -151,14 +151,6 @@ def _result_markup() -> InlineKeyboardMarkup:
     )
 
 
-async def _delete_after(message: Message, delay: int = 30) -> None:
-    try:
-        await asyncio.sleep(delay)
-        await message.delete()
-    except Exception:
-        pass
-
-
 @router.message(Command("gh"))
 async def cmd_ghost_single(message: Message):
     user_id = message.from_user.id
@@ -210,7 +202,7 @@ async def cmd_ghost_single(message: Message):
         result_msg = await message.answer(text, reply_markup=_result_markup(), parse_mode=ParseMode.HTML)
 
     if result.get("status") != "✅ Live":
-        asyncio.create_task(_delete_after(result_msg))
+        schedule_delete(result_msg)
 
 
 @router.message(Command("ghmass"))

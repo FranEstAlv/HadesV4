@@ -1,0 +1,180 @@
+MEDUSA LOGS — generado 2026-11-01 23:10:15 (America/Mexico_City)
+Unidad: gencookie-bot.service | Rango: ultimas 12.0 horas
+Lineas Medusa: 153 | Tarjetas: 19 | Live=2 Dead=1 Error=9
+====================================================================================================
+
+--- RESUMEN POR TARJETA ---
+Nov 02 02:50:19 | 542418******6526 | ⚠️ Error | 18.58s
+Nov 02 03:31:28 | 542418******9074 | ⚠️ Error | [ERROR] |  | 28.02s
+Nov 02 03:32:09 | 542418******7599 | ⚠️ Error | [ERROR] |  | 37.57s
+Nov 02 03:32:34 | 542418******5544 | ⚠️ Error | [ERROR] |  | 21.73s
+Nov 02 03:33:01 | 542418******8431 | ⚠️ Error | [ERROR] |  | 24.1s
+Nov 02 03:34:33 | 542418******6831 | ⚠️ Error | [ERROR] |  | 26.49s
+Nov 02 03:34:33 | 542418******6831 | ⚠️ Error | 26.50s
+Nov 02 03:38:33 | 542418******7409 | ⚠️ Error | [ERROR] |  | 27.07s
+Nov 02 03:38:57 | 542418******7409 | ⚠️ Error | [ERROR] |  | 23.48s
+Nov 02 03:38:57 | 542418******7409 | ⚠️ Error | 50.56s
+Nov 02 03:49:41 | 542418******2079 | ⚠️ Error | [ERROR] |  | 21.36s
+Nov 02 03:50:06 | 542418******2079 | ⚠️ Error | [ERROR] |  | 25.66s
+Nov 02 03:50:06 | 542418******2079 | ⚠️ Error | 47.14s
+Nov 02 05:59:35 | 542418******8910 | ✅ Live | [LIVE CCN] | 12: Declined: 15005-This transaction cannot be processed. BO | 34.31s
+Nov 02 05:59:35 | 542418******8910 | ✅ Live | 34.32s
+Nov 02 06:02:31 | 531374******4388 | ✅ Live | [LIVE CCN] | 12: Declined: 15005-This transaction cannot be processed. BO | 23.17s
+Nov 02 06:02:31 | 531374******4388 | ✅ Live | 23.18s
+Nov 02 06:07:42 | 542418******1279 | ❌ Dead | [DEAD AUTH] | 23: Invalid account number: 10535-This transaction cannot be | 25.82s
+Nov 02 06:07:42 | 542418******1279 | ❌ Dead | 25.83s
+
+--- LOG COMPLETO (filtrado Medusa) ---
+Nov 02 02:50:09 vmi3464216 python[165091]: 2026-11-02 02:50:09,246 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=....19541
+Nov 02 02:50:12 vmi3464216 python[165091]: 2026-11-02 02:50:12,569 - bot.gates.medusa - INFO - [MEDUSA REAL] billing sin form de pago len=45708
+Nov 02 02:50:12 vmi3464216 python[165091]: 2026-11-02 02:50:12,569 - bot.gates.medusa - WARNING - Medusa error: billing sin form de pago
+Nov 02 02:50:12 vmi3464216 python[165091]: 2026-11-02 02:50:12,575 - bot.handlers.md - WARNING - Medusa reintento por error en unitario
+Nov 02 02:50:16 vmi3464216 python[165091]: 2026-11-02 02:50:16,465 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=....19743
+Nov 02 02:50:19 vmi3464216 python[165091]: 2026-11-02 02:50:19,457 - bot.gates.medusa - INFO - [MEDUSA REAL] billing sin form de pago len=45712
+Nov 02 02:50:19 vmi3464216 python[165091]: 2026-11-02 02:50:19,458 - bot.gates.medusa - WARNING - Medusa error: billing sin form de pago
+Nov 02 02:50:19 vmi3464216 python[165091]: 2026-11-02 02:50:19,464 - bot.handlers.md - WARNING - Medusa 542418******6526 -> ⚠️ Error en 18.58s
+Nov 02 03:25:41 vmi3464216 python[174501]: 2026-11-02 03:25:41,764 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=....24715
+Nov 02 03:25:42 vmi3464216 python[174501]: 2026-11-02 03:25:42,987 - bot.gates.medusa - INFO - [MEDUSA REAL] billing OK wo=17935863 sitekey=...3TGww9
+Nov 02 03:25:43 vmi3464216 python[174501]: 2026-11-02 03:25:43,309 - bot.gates.medusa - INFO - [MEDUSA REAL] capsolver create failed: {'errorCode': 'ERROR_KEY_DENIED_ACCESS', 'errorDescription': 'Your api key is invalid or balance is insufficient (CAP-371E9C49C0FE2613B88D60F7870ADCC5BABEB11CBD7CAA95CEDBEC353636CB87).', 'errorId': 1}
+Nov 02 03:25:43 vmi3464216 python[174501]: 2026-11-02 03:25:43,729 - bot.gates.medusa - INFO - [MEDUSA REAL] anticaptcha create failed: {'errorId': 10, 'errorCode': 'ERROR_ZERO_BALANCE', 'errorDescription': 'Account has zero or negative balance'}
+Nov 02 03:25:44 vmi3464216 python[174501]: 2026-11-02 03:25:44,050 - bot.gates.medusa - INFO - [MEDUSA REAL] 2captcha create failed: {'errorId': 1, 'errorCode': 'ERROR_KEY_DOES_NOT_EXIST', 'errorDescription': 'The API key is missing in your request or has incorrect format.'}
+Nov 02 03:25:44 vmi3464216 python[174501]: 2026-11-02 03:25:44,053 - bot.gates.medusa - INFO - [MEDUSA REAL] captcha sin solver con saldo o timeout
+Nov 02 03:25:44 vmi3464216 python[174501]: 2026-11-02 03:25:44,053 - bot.gates.medusa - WARNING - Medusa error: captcha sin solver
+Nov 02 03:25:50 vmi3464216 python[174501]: 2026-11-02 03:25:50,493 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=....24738
+Nov 02 03:25:51 vmi3464216 python[174501]: 2026-11-02 03:25:51,585 - bot.gates.medusa - INFO - [MEDUSA REAL] billing OK wo=17935863 sitekey=...3TGww9
+Nov 02 03:25:51 vmi3464216 python[174501]: 2026-11-02 03:25:51,755 - bot.gates.medusa - INFO - [MEDUSA REAL] capsolver create failed: {'errorCode': 'ERROR_KEY_DENIED_ACCESS', 'errorDescription': 'Your api key is invalid or balance is insufficient (CAP-371E9C49C0FE2613B88D60F7870ADCC5BABEB11CBD7CAA95CEDBEC353636CB87).', 'errorId': 1}
+Nov 02 03:25:52 vmi3464216 python[174501]: 2026-11-02 03:25:52,133 - bot.gates.medusa - INFO - [MEDUSA REAL] anticaptcha create failed: {'errorId': 10, 'errorCode': 'ERROR_ZERO_BALANCE', 'errorDescription': 'Account has zero or negative balance'}
+Nov 02 03:25:52 vmi3464216 python[174501]: 2026-11-02 03:25:52,245 - bot.gates.medusa - INFO - [MEDUSA REAL] 2captcha create failed: {'errorId': 1, 'errorCode': 'ERROR_KEY_DOES_NOT_EXIST', 'errorDescription': 'The API key is missing in your request or has incorrect format.'}
+Nov 02 03:25:52 vmi3464216 python[174501]: 2026-11-02 03:25:52,245 - bot.gates.medusa - INFO - [MEDUSA REAL] captcha sin solver con saldo o timeout
+Nov 02 03:25:52 vmi3464216 python[174501]: 2026-11-02 03:25:52,245 - bot.gates.medusa - WARNING - Medusa error: captcha sin solver
+Nov 02 03:25:58 vmi3464216 python[174501]: 2026-11-02 03:25:58,695 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=....24765
+Nov 02 03:26:00 vmi3464216 python[174501]: 2026-11-02 03:26:00,800 - bot.gates.medusa - INFO - [MEDUSA REAL] billing OK wo=17935863 sitekey=...3TGww9
+Nov 02 03:26:01 vmi3464216 python[174501]: 2026-11-02 03:26:01,218 - bot.gates.medusa - INFO - [MEDUSA REAL] capsolver create failed: {'errorCode': 'ERROR_KEY_DENIED_ACCESS', 'errorDescription': 'Your api key is invalid or balance is insufficient (CAP-371E9C49C0FE2613B88D60F7870ADCC5BABEB11CBD7CAA95CEDBEC353636CB87).', 'errorId': 1}
+Nov 02 03:26:01 vmi3464216 python[174501]: 2026-11-02 03:26:01,681 - bot.gates.medusa - INFO - [MEDUSA REAL] anticaptcha create failed: {'errorId': 10, 'errorCode': 'ERROR_ZERO_BALANCE', 'errorDescription': 'Account has zero or negative balance'}
+Nov 02 03:26:02 vmi3464216 python[174501]: 2026-11-02 03:26:02,177 - bot.gates.medusa - INFO - [MEDUSA REAL] 2captcha create failed: {'errorId': 1, 'errorCode': 'ERROR_KEY_DOES_NOT_EXIST', 'errorDescription': 'The API key is missing in your request or has incorrect format.'}
+Nov 02 03:26:02 vmi3464216 python[174501]: 2026-11-02 03:26:02,179 - bot.gates.medusa - INFO - [MEDUSA REAL] captcha sin solver con saldo o timeout
+Nov 02 03:26:02 vmi3464216 python[174501]: 2026-11-02 03:26:02,184 - bot.gates.medusa - WARNING - Medusa error: captcha sin solver
+Nov 02 03:26:09 vmi3464216 python[174501]: 2026-11-02 03:26:09,329 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=....24887
+Nov 02 03:26:10 vmi3464216 python[174501]: 2026-11-02 03:26:10,506 - bot.gates.medusa - INFO - [MEDUSA REAL] billing OK wo=17935863 sitekey=...3TGww9
+Nov 02 03:26:10 vmi3464216 python[174501]: 2026-11-02 03:26:10,668 - bot.gates.medusa - INFO - [MEDUSA REAL] capsolver create failed: {'errorCode': 'ERROR_KEY_DENIED_ACCESS', 'errorDescription': 'Your api key is invalid or balance is insufficient (CAP-371E9C49C0FE2613B88D60F7870ADCC5BABEB11CBD7CAA95CEDBEC353636CB87).', 'errorId': 1}
+Nov 02 03:26:11 vmi3464216 python[174501]: 2026-11-02 03:26:11,041 - bot.gates.medusa - INFO - [MEDUSA REAL] anticaptcha create failed: {'errorId': 10, 'errorCode': 'ERROR_ZERO_BALANCE', 'errorDescription': 'Account has zero or negative balance'}
+Nov 02 03:26:11 vmi3464216 python[174501]: 2026-11-02 03:26:11,153 - bot.gates.medusa - INFO - [MEDUSA REAL] 2captcha create failed: {'errorId': 1, 'errorCode': 'ERROR_KEY_DOES_NOT_EXIST', 'errorDescription': 'The API key is missing in your request or has incorrect format.'}
+Nov 02 03:26:11 vmi3464216 python[174501]: 2026-11-02 03:26:11,160 - bot.gates.medusa - INFO - [MEDUSA REAL] captcha sin solver con saldo o timeout
+Nov 02 03:26:11 vmi3464216 python[174501]: 2026-11-02 03:26:11,161 - bot.gates.medusa - WARNING - Medusa error: captcha sin solver
+Nov 02 03:26:17 vmi3464216 python[174501]: 2026-11-02 03:26:17,519 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=....24913
+Nov 02 03:26:18 vmi3464216 python[174501]: 2026-11-02 03:26:18,577 - bot.gates.medusa - INFO - [MEDUSA REAL] billing OK wo=17935863 sitekey=...3TGww9
+Nov 02 03:26:18 vmi3464216 python[174501]: 2026-11-02 03:26:18,754 - bot.gates.medusa - INFO - [MEDUSA REAL] capsolver create failed: {'errorCode': 'ERROR_KEY_DENIED_ACCESS', 'errorDescription': 'Your api key is invalid or balance is insufficient (CAP-371E9C49C0FE2613B88D60F7870ADCC5BABEB11CBD7CAA95CEDBEC353636CB87).', 'errorId': 1}
+Nov 02 03:26:19 vmi3464216 python[174501]: 2026-11-02 03:26:19,132 - bot.gates.medusa - INFO - [MEDUSA REAL] anticaptcha create failed: {'errorId': 10, 'errorCode': 'ERROR_ZERO_BALANCE', 'errorDescription': 'Account has zero or negative balance'}
+Nov 02 03:26:19 vmi3464216 python[174501]: 2026-11-02 03:26:19,236 - bot.gates.medusa - INFO - [MEDUSA REAL] 2captcha create failed: {'errorId': 1, 'errorCode': 'ERROR_KEY_DOES_NOT_EXIST', 'errorDescription': 'The API key is missing in your request or has incorrect format.'}
+Nov 02 03:26:19 vmi3464216 python[174501]: 2026-11-02 03:26:19,236 - bot.gates.medusa - INFO - [MEDUSA REAL] captcha sin solver con saldo o timeout
+Nov 02 03:26:19 vmi3464216 python[174501]: 2026-11-02 03:26:19,236 - bot.gates.medusa - WARNING - Medusa error: captcha sin solver
+Nov 02 03:26:25 vmi3464216 python[174501]: 2026-11-02 03:26:25,568 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=....25075
+Nov 02 03:26:26 vmi3464216 python[174501]: 2026-11-02 03:26:26,723 - bot.gates.medusa - INFO - [MEDUSA REAL] billing OK wo=17935863 sitekey=...3TGww9
+Nov 02 03:26:26 vmi3464216 python[174501]: 2026-11-02 03:26:26,884 - bot.gates.medusa - INFO - [MEDUSA REAL] capsolver create failed: {'errorCode': 'ERROR_KEY_DENIED_ACCESS', 'errorDescription': 'Your api key is invalid or balance is insufficient (CAP-371E9C49C0FE2613B88D60F7870ADCC5BABEB11CBD7CAA95CEDBEC353636CB87).', 'errorId': 1}
+Nov 02 03:26:27 vmi3464216 python[174501]: 2026-11-02 03:26:27,261 - bot.gates.medusa - INFO - [MEDUSA REAL] anticaptcha create failed: {'errorId': 10, 'errorCode': 'ERROR_ZERO_BALANCE', 'errorDescription': 'Account has zero or negative balance'}
+Nov 02 03:26:27 vmi3464216 python[174501]: 2026-11-02 03:26:27,394 - bot.gates.medusa - INFO - [MEDUSA REAL] 2captcha create failed: {'errorId': 1, 'errorCode': 'ERROR_KEY_DOES_NOT_EXIST', 'errorDescription': 'The API key is missing in your request or has incorrect format.'}
+Nov 02 03:26:27 vmi3464216 python[174501]: 2026-11-02 03:26:27,395 - bot.gates.medusa - INFO - [MEDUSA REAL] captcha sin solver con saldo o timeout
+Nov 02 03:26:27 vmi3464216 python[174501]: 2026-11-02 03:26:27,395 - bot.gates.medusa - WARNING - Medusa error: captcha sin solver
+Nov 02 03:26:33 vmi3464216 python[174501]: 2026-11-02 03:26:33,715 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=....25108
+Nov 02 03:26:34 vmi3464216 python[174501]: 2026-11-02 03:26:34,890 - bot.gates.medusa - INFO - [MEDUSA REAL] billing OK wo=17935863 sitekey=...3TGww9
+Nov 02 03:26:35 vmi3464216 python[174501]: 2026-11-02 03:26:35,072 - bot.gates.medusa - INFO - [MEDUSA REAL] capsolver create failed: {'errorCode': 'ERROR_KEY_DENIED_ACCESS', 'errorDescription': 'Your api key is invalid or balance is insufficient (CAP-371E9C49C0FE2613B88D60F7870ADCC5BABEB11CBD7CAA95CEDBEC353636CB87).', 'errorId': 1}
+Nov 02 03:26:35 vmi3464216 python[174501]: 2026-11-02 03:26:35,458 - bot.gates.medusa - INFO - [MEDUSA REAL] anticaptcha create failed: {'errorId': 10, 'errorCode': 'ERROR_ZERO_BALANCE', 'errorDescription': 'Account has zero or negative balance'}
+Nov 02 03:26:35 vmi3464216 python[174501]: 2026-11-02 03:26:35,559 - bot.gates.medusa - INFO - [MEDUSA REAL] 2captcha create failed: {'errorId': 1, 'errorCode': 'ERROR_KEY_DOES_NOT_EXIST', 'errorDescription': 'The API key is missing in your request or has incorrect format.'}
+Nov 02 03:26:35 vmi3464216 python[174501]: 2026-11-02 03:26:35,560 - bot.gates.medusa - INFO - [MEDUSA REAL] captcha sin solver con saldo o timeout
+Nov 02 03:26:35 vmi3464216 python[174501]: 2026-11-02 03:26:35,560 - bot.gates.medusa - WARNING - Medusa error: captcha sin solver
+Nov 02 03:26:41 vmi3464216 python[174501]: 2026-11-02 03:26:41,540 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=....25125
+Nov 02 03:26:42 vmi3464216 python[174501]: 2026-11-02 03:26:42,650 - bot.gates.medusa - INFO - [MEDUSA REAL] billing OK wo=17935864 sitekey=...3TGww9
+Nov 02 03:26:42 vmi3464216 python[174501]: 2026-11-02 03:26:42,923 - bot.gates.medusa - INFO - [MEDUSA REAL] capsolver create failed: {'errorCode': 'ERROR_KEY_DENIED_ACCESS', 'errorDescription': 'Your api key is invalid or balance is insufficient (CAP-371E9C49C0FE2613B88D60F7870ADCC5BABEB11CBD7CAA95CEDBEC353636CB87).', 'errorId': 1}
+Nov 02 03:26:43 vmi3464216 python[174501]: 2026-11-02 03:26:43,340 - bot.gates.medusa - INFO - [MEDUSA REAL] anticaptcha create failed: {'errorId': 10, 'errorCode': 'ERROR_ZERO_BALANCE', 'errorDescription': 'Account has zero or negative balance'}
+Nov 02 03:26:43 vmi3464216 python[174501]: 2026-11-02 03:26:43,449 - bot.gates.medusa - INFO - [MEDUSA REAL] 2captcha create failed: {'errorId': 1, 'errorCode': 'ERROR_KEY_DOES_NOT_EXIST', 'errorDescription': 'The API key is missing in your request or has incorrect format.'}
+Nov 02 03:26:43 vmi3464216 python[174501]: 2026-11-02 03:26:43,449 - bot.gates.medusa - INFO - [MEDUSA REAL] captcha sin solver con saldo o timeout
+Nov 02 03:26:43 vmi3464216 python[174501]: 2026-11-02 03:26:43,450 - bot.gates.medusa - WARNING - Medusa error: captcha sin solver
+Nov 02 03:26:49 vmi3464216 python[174501]: 2026-11-02 03:26:49,597 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=....25156
+Nov 02 03:26:50 vmi3464216 python[174501]: 2026-11-02 03:26:50,682 - bot.gates.medusa - INFO - [MEDUSA REAL] billing OK wo=17935864 sitekey=...3TGww9
+Nov 02 03:26:50 vmi3464216 python[174501]: 2026-11-02 03:26:50,878 - bot.gates.medusa - INFO - [MEDUSA REAL] capsolver create failed: {'errorCode': 'ERROR_KEY_DENIED_ACCESS', 'errorDescription': 'Your api key is invalid or balance is insufficient (CAP-371E9C49C0FE2613B88D60F7870ADCC5BABEB11CBD7CAA95CEDBEC353636CB87).', 'errorId': 1}
+Nov 02 03:26:51 vmi3464216 python[174501]: 2026-11-02 03:26:51,408 - bot.gates.medusa - INFO - [MEDUSA REAL] anticaptcha create failed: {'errorId': 10, 'errorCode': 'ERROR_ZERO_BALANCE', 'errorDescription': 'Account has zero or negative balance'}
+Nov 02 03:26:51 vmi3464216 python[174501]: 2026-11-02 03:26:51,536 - bot.gates.medusa - INFO - [MEDUSA REAL] 2captcha create failed: {'errorId': 1, 'errorCode': 'ERROR_KEY_DOES_NOT_EXIST', 'errorDescription': 'The API key is missing in your request or has incorrect format.'}
+Nov 02 03:26:51 vmi3464216 python[174501]: 2026-11-02 03:26:51,536 - bot.gates.medusa - INFO - [MEDUSA REAL] captcha sin solver con saldo o timeout
+Nov 02 03:26:51 vmi3464216 python[174501]: 2026-11-02 03:26:51,536 - bot.gates.medusa - WARNING - Medusa error: captcha sin solver
+Nov 02 03:26:57 vmi3464216 python[174501]: 2026-11-02 03:26:57,773 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=....25197
+Nov 02 03:26:58 vmi3464216 python[174501]: 2026-11-02 03:26:58,996 - bot.gates.medusa - INFO - [MEDUSA REAL] billing OK wo=17935864 sitekey=...3TGww9
+Nov 02 03:26:59 vmi3464216 python[174501]: 2026-11-02 03:26:59,246 - bot.gates.medusa - INFO - [MEDUSA REAL] capsolver create failed: {'errorCode': 'ERROR_KEY_DENIED_ACCESS', 'errorDescription': 'Your api key is invalid or balance is insufficient (CAP-371E9C49C0FE2613B88D60F7870ADCC5BABEB11CBD7CAA95CEDBEC353636CB87).', 'errorId': 1}
+Nov 02 03:26:59 vmi3464216 python[174501]: 2026-11-02 03:26:59,624 - bot.gates.medusa - INFO - [MEDUSA REAL] anticaptcha create failed: {'errorId': 10, 'errorCode': 'ERROR_ZERO_BALANCE', 'errorDescription': 'Account has zero or negative balance'}
+Nov 02 03:26:59 vmi3464216 python[174501]: 2026-11-02 03:26:59,740 - bot.gates.medusa - INFO - [MEDUSA REAL] 2captcha create failed: {'errorId': 1, 'errorCode': 'ERROR_KEY_DOES_NOT_EXIST', 'errorDescription': 'The API key is missing in your request or has incorrect format.'}
+Nov 02 03:26:59 vmi3464216 python[174501]: 2026-11-02 03:26:59,743 - bot.gates.medusa - INFO - [MEDUSA REAL] captcha sin solver con saldo o timeout
+Nov 02 03:26:59 vmi3464216 python[174501]: 2026-11-02 03:26:59,743 - bot.gates.medusa - WARNING - Medusa error: captcha sin solver
+Nov 02 03:31:09 vmi3464216 python[176032]: 2026-11-02 03:31:09,597 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=...8.2142
+Nov 02 03:31:12 vmi3464216 python[176032]: 2026-11-02 03:31:12,386 - bot.gates.medusa - INFO - [MEDUSA REAL] billing OK wo=17935866 sitekey=...3TGww9
+Nov 02 03:31:28 vmi3464216 python[176032]: 2026-11-02 03:31:28,105 - bot.gates.medusa - INFO - [MEDUSA REAL] veredicto crudo: error_block=False detail=
+Nov 02 03:31:28 vmi3464216 python[176032]: 2026-11-02 03:31:28,107 - bot.gates.medusa - INFO - [MEDUSA REAL] sin veredicto claro, len=0
+Nov 02 03:31:28 vmi3464216 python[176032]: 2026-11-02 03:31:28,110 - bot.gates.medusa - INFO - [MEDUSA REAL] tarjeta 542418******9074 -> ⚠️ Error [ERROR] code= en 28.02s
+Nov 02 03:31:38 vmi3464216 python[176032]: 2026-11-02 03:31:38,132 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=...3.2421
+Nov 02 03:31:39 vmi3464216 python[176032]: 2026-11-02 03:31:39,994 - bot.gates.medusa - INFO - [MEDUSA REAL] billing OK wo=17935866 sitekey=...3TGww9
+Nov 02 03:32:09 vmi3464216 python[176032]: 2026-11-02 03:32:09,154 - bot.gates.medusa - INFO - [MEDUSA REAL] veredicto crudo: error_block=False detail=
+Nov 02 03:32:09 vmi3464216 python[176032]: 2026-11-02 03:32:09,158 - bot.gates.medusa - INFO - [MEDUSA REAL] sin veredicto claro, len=0
+Nov 02 03:32:09 vmi3464216 python[176032]: 2026-11-02 03:32:09,158 - bot.gates.medusa - INFO - [MEDUSA REAL] tarjeta 542418******7599 -> ⚠️ Error [ERROR] code= en 37.57s
+Nov 02 03:32:16 vmi3464216 python[176032]: 2026-11-02 03:32:16,679 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=...4.2715
+Nov 02 03:32:18 vmi3464216 python[176032]: 2026-11-02 03:32:18,272 - bot.gates.medusa - INFO - [MEDUSA REAL] billing OK wo=17935867 sitekey=...3TGww9
+Nov 02 03:32:34 vmi3464216 python[176032]: 2026-11-02 03:32:34,391 - bot.gates.medusa - INFO - [MEDUSA REAL] veredicto crudo: error_block=False detail=
+Nov 02 03:32:34 vmi3464216 python[176032]: 2026-11-02 03:32:34,391 - bot.gates.medusa - INFO - [MEDUSA REAL] sin veredicto claro, len=0
+Nov 02 03:32:34 vmi3464216 python[176032]: 2026-11-02 03:32:34,391 - bot.gates.medusa - INFO - [MEDUSA REAL] tarjeta 542418******5544 -> ⚠️ Error [ERROR] code= en 21.73s
+Nov 02 03:32:43 vmi3464216 python[176032]: 2026-11-02 03:32:43,030 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=...0.2918
+Nov 02 03:32:45 vmi3464216 python[176032]: 2026-11-02 03:32:45,117 - bot.gates.medusa - INFO - [MEDUSA REAL] billing OK wo=17935867 sitekey=...3TGww9
+Nov 02 03:33:01 vmi3464216 python[176032]: 2026-11-02 03:33:01,983 - bot.gates.medusa - INFO - [MEDUSA REAL] veredicto crudo: error_block=False detail=
+Nov 02 03:33:01 vmi3464216 python[176032]: 2026-11-02 03:33:01,985 - bot.gates.medusa - INFO - [MEDUSA REAL] sin veredicto claro, len=0
+Nov 02 03:33:01 vmi3464216 python[176032]: 2026-11-02 03:33:01,986 - bot.gates.medusa - INFO - [MEDUSA REAL] tarjeta 542418******8431 -> ⚠️ Error [ERROR] code= en 24.1s
+Nov 02 03:34:10 vmi3464216 python[176885]: 2026-11-02 03:34:10,846 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=...8.3813
+Nov 02 03:34:12 vmi3464216 python[176885]: 2026-11-02 03:34:12,544 - bot.gates.medusa - INFO - [MEDUSA REAL] billing OK wo=17935868 sitekey=...3TGww9
+Nov 02 03:34:33 vmi3464216 python[176885]: 2026-11-02 03:34:33,240 - bot.gates.medusa - INFO - [MEDUSA REAL] thankyou -> 302 loc= final_len=319
+Nov 02 03:34:33 vmi3464216 python[176885]: 2026-11-02 03:34:33,243 - bot.gates.medusa - INFO - [MEDUSA REAL] veredicto crudo: error_block=False detail=
+Nov 02 03:34:33 vmi3464216 python[176885]: 2026-11-02 03:34:33,243 - bot.gates.medusa - INFO - [MEDUSA REAL] sin veredicto claro, len=0
+Nov 02 03:34:33 vmi3464216 python[176885]: 2026-11-02 03:34:33,243 - bot.gates.medusa - INFO - [MEDUSA REAL] tarjeta 542418******6831 -> ⚠️ Error [ERROR] code= en 26.49s
+Nov 02 03:34:33 vmi3464216 python[176885]: 2026-11-02 03:34:33,247 - bot.handlers.md - WARNING - Medusa reintento por error en unitario
+Nov 02 03:34:33 vmi3464216 python[176885]: 2026-11-02 03:34:33,253 - bot.gates.medusa - WARNING - Medusa error: ImpersonateError: Impersonating edge122 is not supported
+Nov 02 03:34:33 vmi3464216 python[176885]: 2026-11-02 03:34:33,254 - bot.handlers.md - WARNING - Medusa 542418******6831 -> ⚠️ Error en 26.50s
+Nov 02 03:38:11 vmi3464216 python[178000]: 2026-11-02 03:38:11,593 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=...7.7142
+Nov 02 03:38:13 vmi3464216 python[178000]: 2026-11-02 03:38:13,171 - bot.gates.medusa - INFO - [MEDUSA REAL] billing OK wo=17935870 sitekey=...3TGww9
+Nov 02 03:38:33 vmi3464216 python[178000]: 2026-11-02 03:38:33,862 - bot.gates.medusa - INFO - [MEDUSA REAL] thankyou -> 302 loc= final_len=319
+Nov 02 03:38:33 vmi3464216 python[178000]: 2026-11-02 03:38:33,867 - bot.gates.medusa - INFO - [MEDUSA REAL] veredicto crudo: error_block=False detail=
+Nov 02 03:38:33 vmi3464216 python[178000]: 2026-11-02 03:38:33,868 - bot.gates.medusa - INFO - [MEDUSA REAL] sin veredicto claro, len=0
+Nov 02 03:38:33 vmi3464216 python[178000]: 2026-11-02 03:38:33,868 - bot.gates.medusa - INFO - [MEDUSA REAL] tarjeta 542418******7409 -> ⚠️ Error [ERROR] code= en 27.07s
+Nov 02 03:38:33 vmi3464216 python[178000]: 2026-11-02 03:38:33,871 - bot.handlers.md - WARNING - Medusa reintento por error en unitario
+Nov 02 03:38:38 vmi3464216 python[178000]: 2026-11-02 03:38:38,428 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=...7.7433
+Nov 02 03:38:40 vmi3464216 python[178000]: 2026-11-02 03:38:40,130 - bot.gates.medusa - INFO - [MEDUSA REAL] billing OK wo=17935871 sitekey=...3TGww9
+Nov 02 03:38:57 vmi3464216 python[178000]: 2026-11-02 03:38:57,356 - bot.gates.medusa - INFO - [MEDUSA REAL] thankyou -> 302 loc= final_len=318
+Nov 02 03:38:57 vmi3464216 python[178000]: 2026-11-02 03:38:57,357 - bot.gates.medusa - INFO - [MEDUSA REAL] veredicto crudo: error_block=False detail=
+Nov 02 03:38:57 vmi3464216 python[178000]: 2026-11-02 03:38:57,357 - bot.gates.medusa - INFO - [MEDUSA REAL] sin veredicto claro, len=0
+Nov 02 03:38:57 vmi3464216 python[178000]: 2026-11-02 03:38:57,357 - bot.gates.medusa - INFO - [MEDUSA REAL] tarjeta 542418******7409 -> ⚠️ Error [ERROR] code= en 23.48s
+Nov 02 03:38:57 vmi3464216 python[178000]: 2026-11-02 03:38:57,358 - bot.handlers.md - WARNING - Medusa 542418******7409 -> ⚠️ Error en 50.56s
+Nov 02 03:49:24 vmi3464216 python[179300]: 2026-11-02 03:49:24,102 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=....20723
+Nov 02 03:49:25 vmi3464216 python[179300]: 2026-11-02 03:49:25,773 - bot.gates.medusa - INFO - [MEDUSA REAL] billing OK wo=17935877 sitekey=...3TGww9
+Nov 02 03:49:41 vmi3464216 python[179300]: 2026-11-02 03:49:41,086 - bot.gates.medusa - INFO - [MEDUSA REAL] thankyou -> 302 loc= final_len=320
+Nov 02 03:49:41 vmi3464216 python[179300]: 2026-11-02 03:49:41,093 - bot.gates.medusa - INFO - [MEDUSA REAL] veredicto crudo: error_block=False detail=
+Nov 02 03:49:41 vmi3464216 python[179300]: 2026-11-02 03:49:41,094 - bot.gates.medusa - INFO - [MEDUSA REAL] sin veredicto claro, len=0
+Nov 02 03:49:41 vmi3464216 python[179300]: 2026-11-02 03:49:41,094 - bot.gates.medusa - INFO - [MEDUSA REAL] tarjeta 542418******2079 -> ⚠️ Error [ERROR] code= en 21.36s
+Nov 02 03:49:41 vmi3464216 python[179300]: 2026-11-02 03:49:41,097 - bot.handlers.md - WARNING - Medusa reintento por error en unitario
+Nov 02 03:49:45 vmi3464216 python[179300]: 2026-11-02 03:49:45,201 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=....20798
+Nov 02 03:49:46 vmi3464216 python[179300]: 2026-11-02 03:49:46,664 - bot.gates.medusa - INFO - [MEDUSA REAL] billing OK wo=17935877 sitekey=...3TGww9
+Nov 02 03:50:06 vmi3464216 python[179300]: 2026-11-02 03:50:06,707 - bot.gates.medusa - INFO - [MEDUSA REAL] thankyou -> 302 loc= final_len=320
+Nov 02 03:50:06 vmi3464216 python[179300]: 2026-11-02 03:50:06,735 - bot.gates.medusa - INFO - [MEDUSA REAL] veredicto crudo: error_block=False detail=
+Nov 02 03:50:06 vmi3464216 python[179300]: 2026-11-02 03:50:06,758 - bot.gates.medusa - INFO - [MEDUSA REAL] sin veredicto claro, len=0
+Nov 02 03:50:06 vmi3464216 python[179300]: 2026-11-02 03:50:06,758 - bot.gates.medusa - INFO - [MEDUSA REAL] tarjeta 542418******2079 -> ⚠️ Error [ERROR] code= en 25.66s
+Nov 02 03:50:06 vmi3464216 python[179300]: 2026-11-02 03:50:06,879 - bot.handlers.md - WARNING - Medusa 542418******2079 -> ⚠️ Error en 47.14s
+Nov 02 05:59:07 vmi3464216 python[182601]: 2026-11-02 05:59:07,297 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=....29972
+Nov 02 05:59:08 vmi3464216 python[182601]: 2026-11-02 05:59:08,778 - bot.gates.medusa - INFO - [MEDUSA REAL] billing OK wo=17935955 sitekey=...3TGww9
+Nov 02 05:59:35 vmi3464216 python[182601]: 2026-11-02 05:59:35,148 - bot.gates.medusa - INFO - [MEDUSA REAL] thankyou -> 200 loc=billing.cgi?storeid=*121ceca48a820a7c9750f4&shopinfo=SSMSB10833423721562495540.29972&fromid=thankyou.cgi&gs_pay1=ExplodeAf3633cebb81689127d0c83e993eb8274bdb94af final_len=82401
+Nov 02 05:59:35 vmi3464216 python[182601]: 2026-11-02 05:59:35,155 - bot.gates.medusa - INFO - [MEDUSA REAL] veredicto crudo: error_block=True detail=12: Declined: 15005-This transaction cannot be processed. BO1P155E0E16 111111 Step 1: Review your order details PLEASE Review Your Order Information Carefully! Quantity Image Name SKU Each Total 5 The
+Nov 02 05:59:35 vmi3464216 python[182601]: 2026-11-02 05:59:35,156 - bot.gates.medusa - INFO - [MEDUSA REAL] tarjeta 542418******8910 -> ✅ Live [LIVE CCN] code=12: Declined: 15005-This transaction cannot be processed. BO en 34.31s
+Nov 02 05:59:35 vmi3464216 python[182601]: 2026-11-02 05:59:35,164 - bot.handlers.md - INFO - Medusa 542418******8910 -> ✅ Live en 34.32s
+Nov 02 06:02:12 vmi3464216 python[182601]: 2026-11-02 06:02:12,411 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=...9.7997
+Nov 02 06:02:13 vmi3464216 python[182601]: 2026-11-02 06:02:13,766 - bot.gates.medusa - INFO - [MEDUSA REAL] billing OK wo=17935957 sitekey=...3TGww9
+Nov 02 06:02:31 vmi3464216 python[182601]: 2026-11-02 06:02:31,895 - bot.gates.medusa - INFO - [MEDUSA REAL] thankyou -> 200 loc=billing.cgi?storeid=*121ceca48a820a7c9750f4&shopinfo=SSMSB10601589232124103899.7997&fromid=thankyou.cgi&gs_pay1=ExplodeA9a56d7854066c2b3a8ecec79dc57b8a4bdb94af9 final_len=82384
+Nov 02 06:02:31 vmi3464216 python[182601]: 2026-11-02 06:02:31,899 - bot.gates.medusa - INFO - [MEDUSA REAL] veredicto crudo: error_block=True detail=12: Declined: 15005-This transaction cannot be processed. BO1P155E1C82 111111 Step 1: Review your order details PLEASE Review Your Order Information Carefully! Quantity Image Name SKU Each Total 5 The
+Nov 02 06:02:31 vmi3464216 python[182601]: 2026-11-02 06:02:31,900 - bot.gates.medusa - INFO - [MEDUSA REAL] tarjeta 531374******4388 -> ✅ Live [LIVE CCN] code=12: Declined: 15005-This transaction cannot be processed. BO en 23.17s
+Nov 02 06:02:31 vmi3464216 python[182601]: 2026-11-02 06:02:31,908 - bot.handlers.md - INFO - Medusa 531374******4388 -> ✅ Live en 23.18s
+Nov 02 06:07:20 vmi3464216 python[208951]: 2026-11-02 06:07:20,472 - bot.gates.medusa - INFO - [MEDUSA REAL] carrito OK sbid=....11579
+Nov 02 06:07:21 vmi3464216 python[208951]: 2026-11-02 06:07:21,813 - bot.gates.medusa - INFO - [MEDUSA REAL] billing OK wo=17935960 sitekey=...3TGww9
+Nov 02 06:07:42 vmi3464216 python[208951]: 2026-11-02 06:07:42,673 - bot.gates.medusa - INFO - [MEDUSA REAL] thankyou -> 200 loc=billing.cgi?storeid=*121ceca48a820a7c9750f4&shopinfo=SSMSB771235753182434848.11579&fromid=thankyou.cgi&gs_pay1=ExplodeA42a397e900ab9615c84e22c9e501055fbdb94af9a final_len=82489
+Nov 02 06:07:42 vmi3464216 python[208951]: 2026-11-02 06:07:42,678 - bot.gates.medusa - INFO - [MEDUSA REAL] veredicto crudo: error_block=True detail=23: Invalid account number: 10535-This transaction cannot be processed. Please enter a valid credit card number and type. BO1P155E3318 111111 Step 1: Review your order details PLEASE Review Your Order
+Nov 02 06:07:42 vmi3464216 python[208951]: 2026-11-02 06:07:42,678 - bot.gates.medusa - INFO - [MEDUSA REAL] tarjeta 542418******1279 -> ❌ Dead [DEAD AUTH] code=23: Invalid account number: 10535-This transaction cannot be en 25.82s
+Nov 02 06:07:42 vmi3464216 python[208951]: 2026-11-02 06:07:42,682 - bot.handlers.md - INFO - Medusa 542418******1279 -> ❌ Dead en 25.83s

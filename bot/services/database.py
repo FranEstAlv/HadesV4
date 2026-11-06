@@ -6,6 +6,7 @@ y cierre garantizado de conexiones.
 from __future__ import annotations
 
 import asyncio
+import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncGenerator
@@ -16,9 +17,56 @@ from bot.config import DATA_DIR
 
 DB_PATH = DATA_DIR / "bot_database.db"
 
+logger = logging.getLogger(__name__)
+
 # Serializa la inicialización para que no haya carreras al arrancar.
 _db_init_lock = asyncio.Lock()
 _db_initialized = False
+
+# Backups automáticos: se conservan los últimos N archivos.
+DB_BACKUP_DIR = DATA_DIR / "backups"
+DB_BACKUP_KEEP = int(__import__("os").getenv("DB_BACKUP_KEEP", "7"))
+# Versión de esquema para migraciones futuras (Fase 5).
+SCHEMA_VERSION = 1
+
+
+async def maybe_backup_db() -> None:
+    """Copia diaria de la BD a data/backups/ (Fase 5).
+
+    Se ejecuta al arrancar: si ya existe un backup de hoy, no hace nada.
+    Conserva los últimos DB_BACKUP_KEEP archivos. Nunca tumba el arranque.
+    """
+    import shutil
+    from datetime import datetime, timezone
+
+    try:
+        if not DB_PATH.exists():
+            return
+        DB_BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        dest = DB_BACKUP_DIR / f"bot_database.{today}.db"
+        if dest.exists():
+            return
+        # Copia consistente: checkpoint WAL antes de copiar el archivo.
+        try:
+            import aiosqlite as _aios
+
+            async with _aios.connect(DB_PATH, timeout=60) as _db:
+                await _db.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+        except Exception:
+            pass
+        shutil.copy2(DB_PATH, dest)
+        # Rotación: conservar solo los últimos N.
+        backups = sorted(DB_BACKUP_DIR.glob("bot_database.*.db"))
+        while len(backups) > DB_BACKUP_KEEP:
+            oldest = backups.pop(0)
+            try:
+                oldest.unlink()
+            except Exception:
+                break
+        logger.info("Backup BD creado: %s", dest.name)
+    except Exception as exc:
+        logger.warning("No se pudo crear backup de BD: %s", exc)
 
 
 async def _setup_connection(db: aiosqlite.Connection) -> None:
@@ -47,6 +95,19 @@ async def init_db() -> None:
             return
 
         DATA_DIR.mkdir(parents=True, exist_ok=True)
+        
+        # Migrar tablas existentes si faltan columnas
+        async with aiosqlite.connect(DB_PATH, timeout=60) as db:
+            await _setup_connection(db)
+            
+            # Añadir columna proxy a amazon_cookies si no existe
+            try:
+                await db.execute("ALTER TABLE amazon_cookies ADD COLUMN proxy TEXT")
+                await db.commit()
+                logger.info("Migración: columna 'proxy' añadida a amazon_cookies")
+            except aiosqlite.OperationalError:
+                # La columna ya existe, no hacer nada
+                pass
         async with aiosqlite.connect(DB_PATH, timeout=60) as db:
             await _setup_connection(db)
 
@@ -99,6 +160,7 @@ async def init_db() -> None:
                 CREATE TABLE IF NOT EXISTS amazon_cookies (
                     user_id INTEGER PRIMARY KEY,
                     cookie TEXT NOT NULL,
+                    proxy TEXT,
                     updated_at TEXT,
                     FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE CASCADE
                 )

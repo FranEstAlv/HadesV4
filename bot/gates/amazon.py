@@ -65,6 +65,18 @@ def _run_blocking(fn, *args):
     loop = asyncio.get_running_loop()
     return loop.run_in_executor(_EXECUTOR, fn, *args)
 
+
+def shutdown_executors() -> None:
+    """Cierra el pool dedicado del gate (llamar desde el shutdown hook).
+
+    Fase 4: antes el executor global nunca se cerraba y los hilos
+    podían quedar zombis tras `systemctl restart`.
+    """
+    try:
+        _EXECUTOR.shutdown(wait=False, cancel_futures=True)
+    except Exception:
+        pass
+
 # Excepciones de red que capturan los dos clientes HTTP que usa el gate.
 try:  # curl_cffi >= 0.7 expone su propio RequestException
     from curl_cffi.requests.exceptions import RequestException as _CurlRequestError
@@ -72,6 +84,13 @@ except Exception:  # pragma: no cover - versiones antiguas
     _CurlRequestError = requests.exceptions.RequestException  # type: ignore
 
 _NETWORK_ERRORS = (requests.exceptions.RequestException, _CurlRequestError)
+
+
+def _proxy_to_dict(proxy_url: str) -> Optional[dict]:
+    """Convierte una URL de proxy en un dict para requests."""
+    if not proxy_url:
+        return None
+    return {"http": proxy_url, "https": proxy_url}
 
 
 def _pick_mx_proxy() -> Optional[dict]:
@@ -148,26 +167,27 @@ _HEADERS_BASE = {
 # ---------------------------------------------------------------------------
 # Utilidades
 # ---------------------------------------------------------------------------
-def _get_cookie(user_id: Optional[int] = None) -> Optional[str]:
-    """Obtiene la cookie de Amazon: primero la del usuario, luego .env o archivo."""
+def _get_cookie(user_id: Optional[int] = None) -> Tuple[Optional[str], Optional[str]]:
+    """Obtiene la cookie de Amazon y su proxy asociado: primero del usuario, luego .env o archivo."""
     # La cookie por usuario es async; el caller debe obtenerla antes si quiere usarla.
     # Esta función se mantiene para fallback global (sin user_id).
     cookie = os.getenv("AMAZON_COOKIE", "").strip()
     if cookie:
-        return cookie
+        return cookie, None
     path = Path("data/amazon_cookie.txt")
     if path.exists():
         text = path.read_text(encoding="utf-8").strip()
         if text:
-            return text
-    return None
+            return text, None
+    return None, None
 
 
-async def _get_cookie_for_user(user_id: int) -> Optional[str]:
-    """Obtiene la cookie de Amazon para un usuario, con fallback global."""
+async def _get_cookie_for_user(user_id: int) -> Tuple[Optional[str], Optional[str]]:
+    """Obtiene la cookie de Amazon y el proxy guardados para un usuario."""
     user_cookie = await get_amazon_cookie(user_id)
     if user_cookie:
-        return user_cookie
+        cookie, proxy = user_cookie
+        return cookie, proxy
     return _get_cookie()
 
 
@@ -827,6 +847,9 @@ async def _acquire_live_session() -> Optional[Dict[str, str]]:
             account.get("email") or "", account.get("password") or ""
         )
         if pw_session.usable:
+            # Guardar cookie con proxy para uso futuro
+            if pw_session.proxy:
+                await save_amazon_cookie(user_id=0, cookie=pw_session.cookie, proxy=pw_session.proxy)
             return {
                 "status": "ok",
                 "cookie": pw_session.cookie,
@@ -864,6 +887,9 @@ async def _acquire_live_session() -> Optional[Dict[str, str]]:
         return None
 
     if browser_session.usable:
+        # Guardar cookie con proxy para uso futuro
+        if browser_session.proxy:
+            await save_amazon_cookie(user_id=0, cookie=browser_session.cookie, proxy=browser_session.proxy)
         return {
             "status": "ok",
             "cookie": browser_session.cookie,
@@ -871,6 +897,7 @@ async def _acquire_live_session() -> Optional[Dict[str, str]]:
             "customer_id": browser_session.customer_id,
             "detail": browser_session.detail,
             "source": "navegador",
+            "proxy": browser_session.proxy,
         }
 
     return {
@@ -947,7 +974,7 @@ _COOKIE_ADVICE = {
 }
 
 
-async def validate_amazon_cookie(cookie: str) -> Dict[str, str]:
+async def validate_amazon_cookie(cookie: str, proxy: Optional[str] = None) -> Dict[str, str]:
     """Verifica una cookie de Amazon MX antes de guardarla o de usarla.
 
     Clasifica la sesión en:
@@ -968,7 +995,14 @@ async def validate_amazon_cookie(cookie: str) -> Dict[str, str]:
 
     def _run() -> Tuple[bool, str, str]:
         session = _new_session()
-        return _verify_cookie(session, cookie, _pick_mx_proxy())
+        try:
+            proxies = _proxy_to_dict(proxy) if proxy else _pick_mx_proxy()
+            return _verify_cookie(session, cookie, proxies)
+        finally:
+            try:
+                session.close()
+            except Exception:
+                pass
 
     try:
         ok, classification, msg = await _run_blocking(_run)
@@ -992,17 +1026,23 @@ async def validate_amazon_cookie(cookie: str) -> Dict[str, str]:
 
 async def amazon_check_cookie(user_id: Optional[int] = None) -> Dict[str, str]:
     """Verifica que la cookie guardada sea valida sin procesar tarjeta."""
-    cookie = await _get_cookie_for_user(user_id)
-    cookie_source = "usuario" if user_id and await get_amazon_cookie(user_id) else "global"
+    cookie_and_proxy = await _get_cookie_for_user(user_id)
+    cookie, saved_proxy = cookie_and_proxy if cookie_and_proxy else (None, None)
+    cookie_source = "usuario" if user_id and cookie else "global"
     logger.info("Amazon gate: check_cookie user_id=%s cookie_source=%s", user_id, cookie_source)
     if not cookie:
         return {"status": "<tg-emoji emoji-id=\"5021618274345943603\">⚠️</tg-emoji> Error", "message": "No hay cookie de Amazon configurada. Guardala con /save <cookie> o /save respondiendo a un mensaje con la cookie."}
 
-    loop = asyncio.get_event_loop()
-
     def _run() -> Dict[str, str]:
         session = _new_session()
-        ok, classification, msg = _verify_cookie(session, cookie, _pick_mx_proxy())
+        proxies = saved_proxy or _pick_mx_proxy()
+        try:
+            ok, classification, msg = _verify_cookie(session, cookie, proxies)
+        finally:
+            try:
+                session.close()
+            except Exception:
+                pass
         if not ok:
             status_emoji = "<tg-emoji emoji-id=\"5021618274345943603\">⚠️</tg-emoji> Error"
             if classification == "expired":
@@ -1111,7 +1151,8 @@ async def amazon_refresh_cookie(user_id: Optional[int] = None) -> Dict[str, obje
       - Sin reintentos en bucle: un intento por llamada. El cooldown entre
         llamadas lo aplica el handler (/checkcookies, botón Export).
     """
-    cookie = await _get_cookie_for_user(user_id) if user_id else _get_cookie()
+    cookie_and_proxy = await _get_cookie_for_user(user_id) if user_id else _get_cookie()
+    cookie, saved_proxy = cookie_and_proxy if cookie_and_proxy else (None, None)
     if not cookie:
         return {
             "status": "<tg-emoji emoji-id=\"5021618274345943603\">⚠️</tg-emoji> Error",
@@ -1126,8 +1167,9 @@ async def amazon_refresh_cookie(user_id: Optional[int] = None) -> Dict[str, obje
         session = _new_session()
         try:
             headers = {**_HEADERS_BASE, "cookie": cookie}
+            proxies = saved_proxy or _pick_mx_proxy()
             try:
-                session.get(_AMAZON_VERIFY_URL, headers=headers, proxies=_pick_mx_proxy(), timeout=20)
+                session.get(_AMAZON_VERIFY_URL, headers=headers, proxies=proxies, timeout=20)
             except _NETWORK_ERRORS as exc:
                 logger.error("Amazon refresh: error de red -> %s", exc)
                 return {
@@ -1147,7 +1189,7 @@ async def amazon_refresh_cookie(user_id: Optional[int] = None) -> Dict[str, obje
                 if name and value:
                     fresh[name] = value
             merged = _merge_cookie_string(cookie, fresh) if fresh else cookie
-            ok, classification, msg = _verify_cookie(session, merged, _pick_mx_proxy())
+            ok, classification, msg = _verify_cookie(session, merged, proxies)
             if not ok:
                 status_emoji = "<tg-emoji emoji-id=\"5021618274345943603\">⚠️</tg-emoji> Error"
                 if classification == "expired":
@@ -1170,6 +1212,7 @@ async def amazon_refresh_cookie(user_id: Optional[int] = None) -> Dict[str, obje
                 "classification": "valid",
                 "refreshed": merged != cookie,
                 "cookie": merged,
+                "proxy": proxies.get("https") if isinstance(proxies, dict) else proxies,
             }
         finally:
             session.close()
@@ -1184,6 +1227,7 @@ async def amazon_check(
     card_data: str,
     user_id: Optional[int] = None,
     cookie: Optional[str] = None,
+    proxy: Optional[str] = None,
 ) -> Dict[str, str]:
     """Verifica una sola tarjeta contra Amazon MX.
 
@@ -1194,11 +1238,17 @@ async def amazon_check(
          estado del widget que trajo ese navegador.
 
     `cookie` explícita tiene prioridad (sesión recién creada por /gencookie).
+    `proxy` explícito se usa si se pasó, sino se intenta recuperar de la cookie guardada.
     """
     cookie_source = "directa"
+    saved_proxy = None
     if not cookie:
-        cookie = await _get_cookie_for_user(user_id)
-        cookie_source = "usuario" if user_id and await get_amazon_cookie(user_id) else "global"
+        cookie_and_proxy = await _get_cookie_for_user(user_id)
+        if cookie_and_proxy and cookie_and_proxy[0]:
+            cookie, saved_proxy = cookie_and_proxy
+            cookie_source = "usuario" if user_id else "global"
+            if saved_proxy:
+                proxy = saved_proxy  # Priorizar proxy guardado
     logger.info("Amazon gate: inicio check user_id=%s cookie_source=%s", user_id, cookie_source)
 
     card_tuple = _validate_card(card_data)
@@ -1210,53 +1260,62 @@ async def amazon_check(
     def _run() -> Dict[str, str]:
         # Un solo proxy para toda la operación: verificar por una IP y
         # procesar por otra rompe la coherencia de la sesión.
-        proxies = _pick_mx_proxy()
+        proxies = proxy or saved_proxy or _pick_mx_proxy()
         session = _new_session()
+        try:
+            if cookie:
+                if not _session_verified_recently(user_id):
+                    ok, classification, msg = _verify_cookie(session, cookie, proxies)
+                    if ok:
+                        _mark_session_verified(user_id)
+                    else:
+                        logger.warning(
+                            "Amazon gate: validacion de cookie fallo -> %s (%s)", msg, classification
+                        )
+                        status_emoji = "<tg-emoji emoji-id=\"5021618274345943603\">⚠️</tg-emoji> Error"
+                        if classification == "expired":
+                            status_emoji = "❌ Expirada"
+                        elif classification == "suspended":
+                            status_emoji = "🚫 Suspendida"
+                        elif classification == "verification_required":
+                            status_emoji = "🔒 Verificacion"
+                        elif classification == "captcha":
+                            status_emoji = "🤖 CAPTCHA"
+                        # La sesión guardada no sirve: se prueba el navegador.
+                        return {
+                            "status": status_emoji,
+                            "message": msg,
+                            "classification": classification,
+                            "_dead_session": True,
+                        }
+                result = _process_card(session, card_tuple, 1, cookie, proxies)
+                if _is_session_failure(result):
+                    _forget_session_verified(user_id)
+                if result.get("classification") == "auth_wall":
+                    # Muro max_auth_age=0: la cookie guardada no alcanza.
+                    result["_dead_session"] = True
+                return result
 
-        if cookie:
-            if not _session_verified_recently(user_id):
-                ok, classification, msg = _verify_cookie(session, cookie, proxies)
-                if ok:
-                    _mark_session_verified(user_id)
-                else:
-                    logger.warning(
-                        "Amazon gate: validacion de cookie fallo -> %s (%s)", msg, classification
-                    )
-                    status_emoji = "<tg-emoji emoji-id=\"5021618274345943603\">⚠️</tg-emoji> Error"
-                    if classification == "expired":
-                        status_emoji = "❌ Expirada"
-                    elif classification == "suspended":
-                        status_emoji = "🚫 Suspendida"
-                    elif classification == "verification_required":
-                        status_emoji = "🔒 Verificacion"
-                    elif classification == "captcha":
-                        status_emoji = "🤖 CAPTCHA"
-                    # La sesión guardada no sirve: se prueba el navegador.
-                    return {
-                        "status": status_emoji,
-                        "message": msg,
-                        "classification": classification,
-                        "_dead_session": True,
-                    }
-            result = _process_card(session, card_tuple, 1, cookie, proxies)
-            if _is_session_failure(result):
-                _forget_session_verified(user_id)
-            if result.get("classification") == "auth_wall":
-                # Muro max_auth_age=0: la cookie guardada no alcanza.
-                result["_dead_session"] = True
-            return result
-
-        return {
-            "status": "<tg-emoji emoji-id=\"5021618274345943603\">⚠️</tg-emoji> Error",
-            "message": (
-                "No hay cookie de Amazon configurada. Guardala con /save <cookie> "
-                "o /save respondiendo a un mensaje con la cookie."
-            ),
-            "classification": "no_cookie",
-            "_dead_session": True,
-        }
+            return {
+                "status": "<tg-emoji emoji-id=\"5021618274345943603\">⚠️</tg-emoji> Error",
+                "message": (
+                    "No hay cookie de Amazon configurada. Guardala con /save <cookie> "
+                    "o /save respondiendo a un mensaje con la cookie."
+                ),
+                "classification": "no_cookie",
+                "_dead_session": True,
+            }
+        finally:
+            try:
+                session.close()
+            except Exception:
+                pass
 
     result = await _run_blocking(_run)
+
+    # Guardar cookie con proxy si se usó una directa y el resultado no es de navegador
+    if cookie_source == "directa" and user_id and proxies and "session_source" not in result:
+        await save_amazon_cookie(user_id=user_id, cookie=cookie, proxy=proxies.get("https"))
 
     # --- Escalado: si la sesión guardada no sirve, navegador real. ---
     if result.pop("_dead_session", False) and AMAZON_BROWSER_FALLBACK:
@@ -1275,14 +1334,33 @@ async def amazon_check(
 
             def _run_with_session() -> Dict[str, str]:
                 session2 = _new_session()
-                return _process_card(
-                    session2,
-                    card_tuple,
-                    1,
-                    browser_cookie,
-                    session_proxy,
-                    bootstrap=browser_state,
-                )
+                try:
+                    result2 = _process_card(
+                        session2,
+                        card_tuple,
+                        1,
+                        browser_cookie,
+                        session_proxy,
+                        bootstrap=browser_state,
+                    )
+                    # Guardar cookie con proxy si la sesión es de navegador
+                    # (nota: create_task desde hilo worker; el guardado es best-effort).
+                    if bootstrap.get("source") in ("playwright", "navegador"):
+                        proxy_str = session_proxy if isinstance(session_proxy, str) else None
+                        try:
+                            loop2_run = asyncio.get_running_loop()
+                        except RuntimeError:
+                            loop2_run = None
+                        if loop2_run is not None:
+                            loop2_run.create_task(
+                                save_amazon_cookie(user_id=0, cookie=browser_cookie, proxy=proxy_str)
+                            )
+                    return result2
+                finally:
+                    try:
+                        session2.close()
+                    except Exception:
+                        pass
 
             result = await _run_blocking(_run_with_session)
             result["session_source"] = bootstrap.get("source", "http")
@@ -1365,10 +1443,10 @@ async def _amazon_check_multiple_inner(
     """Cuerpo del lote masivo (ya tiene el candado tomado)."""
     total = len(cards)
     results: List[Dict[str, str]] = []
-    loop = asyncio.get_event_loop()
 
-    cookie = await _get_cookie_for_user(user_id)
-    cookie_source = "usuario" if user_id and await get_amazon_cookie(user_id) else "global"
+    cookie_and_proxy = await _get_cookie_for_user(user_id)
+    cookie, saved_proxy = cookie_and_proxy if cookie_and_proxy else (None, None)
+    cookie_source = "usuario" if user_id and cookie else "global"
     logger.info(
         "Amazon gate: inicio mass user_id=%s cookie_source=%s total_cards=%d",
         user_id, cookie_source, total,
@@ -1387,7 +1465,8 @@ async def _amazon_check_multiple_inner(
     elif not _session_verified_recently(user_id):
         def _verify_cookie_once() -> Tuple[str, str]:
             session = _new_session()
-            ok, classification, msg = _verify_cookie(session, cookie, _pick_mx_proxy())
+            proxies = saved_proxy or _pick_mx_proxy()
+            ok, classification, msg = _verify_cookie(session, cookie, proxies)
             return classification, msg
 
         classification = "unknown"
@@ -1452,7 +1531,7 @@ async def _amazon_check_multiple_inner(
 
     # Un solo proxy para todo el lote masivo, y el mismo que el del login
     # (si la sesion vino de un login en caliente).
-    shared_proxies = session_proxy or _pick_mx_proxy()
+    shared_proxies = session_proxy or saved_proxy or _pick_mx_proxy()
 
     # Tope de tiempo del lote: el usuario siempre recibe el desenlace.
     deadline = time.monotonic() + MASS_TIMEOUT_S
@@ -1487,9 +1566,15 @@ async def _amazon_check_multiple_inner(
 
             def _run_one(card_tuple=card_tuple, index=i + 1) -> Dict[str, str]:
                 session = _new_session()
-                return _process_card(
-                    session, card_tuple, index, session_cookie, shared_proxies, bootstrap=bootstrap
-                )
+                try:
+                    return _process_card(
+                        session, card_tuple, index, session_cookie, shared_proxies, bootstrap=bootstrap
+                    )
+                finally:
+                    try:
+                        session.close()
+                    except Exception:
+                        pass
 
             result = await _run_blocking(_run_one)
 

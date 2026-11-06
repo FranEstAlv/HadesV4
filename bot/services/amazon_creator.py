@@ -43,6 +43,7 @@ def _save_cookie_file(result: dict) -> Path:
         "password": p.get("password", ""),
         "name": p.get("name", ""),
         "cookies": result.get("cookies", ""),
+        "proxy": result.get("proxy"),
         "time": result.get("time", 0),
         "warning": result.get("warning", ""),
     }
@@ -81,6 +82,7 @@ def _save_attempt_file(result: dict, user_id: int, email_mode: str = "", mail_to
         "password": p.get("password", ""),
         "name": p.get("name", ""),
         "mail_token": mail_token,
+        "proxy": result.get("proxy"),
         "tech_message": result.get("message", ""),
         "warning": result.get("warning", ""),
     }
@@ -233,6 +235,7 @@ async def create_amazon_account(
             }
             result["registeredCountry"] = getattr(creator, "country", country)
             result["domain"] = getattr(creator, "domain", "")
+            result["proxy"] = getattr(creator, "proxy", None)
         except Exception:
             pass
     finally:
@@ -240,6 +243,9 @@ async def create_amazon_account(
         _running_creations.pop(user_id, None)
 
     result["time"] = round(_time.time() - t0, 1)
+    # Guardar el proxy del creator (si se creó una cuenta exitosamente)
+    if result.get("status") and not result.get("proxy"):
+        result["proxy"] = getattr(creator, "proxy", None)
 
     if result.get("status"):
         try:
